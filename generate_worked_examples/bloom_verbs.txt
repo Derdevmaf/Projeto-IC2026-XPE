@@ -1,0 +1,136 @@
+# bloom_verbs.txt
+# Verbos da Taxonomia de Bloom Revisada, extraidos do anexo em PDF
+# fornecido pelo usuario (Anexo II - Exemplos de verbos da Taxonomia
+# de Bloom Revisada). Organizado pelas 6 categorias cognitivas.
+#
+# Linhas iniciadas com '#' sao comentarios/cabecalhos de categoria e
+# sao ignoradas pelo programa. Cada linha restante e tratada como um
+# verbo/expressao valido para sorteio.
+
+# Lembrar
+Assinalar
+Caracterizar
+Listar
+Localizar
+Marcar com x
+Nomear
+Rotular
+Sublinhar
+Citar
+Completar
+Conferir
+Escrever
+Numerar
+Recuperar
+Registrar
+Relatar
+Repetir
+Reproduzir
+Transcrever
+
+# Entender
+Dar a ideia principal
+Descrever
+Discutir
+Dizer
+Rever
+Revisar
+Traduzir
+Citar
+Desenhar
+Ilustrar
+Relatar
+Agrupar
+Associar
+Categorizar
+Escolher
+Ordenar
+Organizar
+Reordenar
+Separar
+Elaborar um parágrafo e síntese
+Enumerar
+Listar pontos principais
+Apresentar conclusão sobre algo
+Explicar diferenças
+Discriminar
+Identificar e contrastar características
+Distinguir
+Elaborar quadros comparativos
+Encontrar elementos comuns ou distintos entre o que observa.
+Estabelecer paralelo
+Relacionar
+Explicar com as próprias palavras
+Antecipar
+Deduzir
+Estimar
+Construir ou resolver analogias
+
+# Aplicar
+Calcular
+Determinar
+Empreender
+Executar
+Implementar
+Utilizar
+Construir
+
+# Analisar
+Contrastar
+Discriminar
+Distinguir o principal do secundário.
+Identificar a relação entre as partes e a totalidade.
+Listar informações importantes e eliminar informações irrelevantes.
+Selecionar
+Separar algo a partir de um determinado critério.
+Analisar sintaticamente
+Categorizar
+Construir quadros sinópticos
+Documentar
+Elaborar mapas conceituais
+Elaborar um gráfico ou tabela
+Encontrar coerência
+Esquematizar
+Estruturar
+Integrar
+Mapear
+Ordenar objetos, elementos ou processo.
+Desconstruir
+Determinar causas e consequências.
+Determinar pontos de vista ou valores subjacentes a uma informação dada.
+Estabelecer pontos de vista, tendência, valores ou intenções subjacentes a uma informação.
+
+# Avaliar
+Apontar ou identificar contradições
+Comprovar
+Conferir
+Eliminar
+Investigar
+Revisar
+Emitir apreciação pessoal
+Escolher a melhor opção para resolver uma situação.
+Expressar pontos de vista
+Fazer comentários
+Julgar
+Explicitar argumentos a favor ou contra.
+Defender
+Justificar
+Sustentar uma posição
+
+# Criar
+Conjeturar
+Formular
+Levantar hipóteses
+Propor alternativas
+Propor problemas para resolução.
+Representar o problema e eleger alternativas.
+Solucionar
+Sugerir hipóteses a partir de critérios.
+Supor
+Desenhar um procedimento para realizar uma tarefa.
+Elaborar um projeto
+Compor
+Construir algo
+Desenhar
+Gerar
+Redigir (diário, relatório, texto...).

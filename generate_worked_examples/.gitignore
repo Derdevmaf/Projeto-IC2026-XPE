@@ -1,0 +1,17 @@
+# Segredos
+.env
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Saida gerada pelo programa (remova esta linha se quiser versionar os
+# worked examples gerados)
+worked_examples/
