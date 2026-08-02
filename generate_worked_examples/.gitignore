@@ -8,10 +8,10 @@ __pycache__/
 *.egg-info/
 
 # Ambientes virtuais
-.venv/
-venv/
-env/
+#.venv/
+# venv/
+# env/
 
 # Saida gerada pelo programa (remova esta linha se quiser versionar os
 # worked examples gerados)
-worked_examples/
+# worked_examples/

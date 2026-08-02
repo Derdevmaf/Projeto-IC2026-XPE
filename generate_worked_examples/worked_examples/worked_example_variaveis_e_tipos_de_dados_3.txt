@@ -1,0 +1,3 @@
+Um professor de programação deseja registrar algumas informações sobre seus alunos usando variáveis em Python. Sua tarefa é **associar** cada informação listada abaixo a um nome de variável descritivo e, mais importante, ao tipo de dado Python mais adequado para representá-la.
+
+Informações a serem associ

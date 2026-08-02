@@ -1,0 +1,53 @@
+## Worked Example: Módulos, Pacotes e Bibliotecas Padrão em Python
+
+**1. Enunciado do Problema/Tarefa:**
+
+Descreva em detalhes o que são "Módulos", "Pacotes" e "Bibliotecas Padrão" na programação Python. Para cada um, explique seu propósito principal, como eles são estruturados ou compostos e forneça um exemplo simples de como podem ser utilizados, visando demonstrar seu conceito e funcionalidade básica.
+
+---
+
+**2. Resolução Comentada, Passo a Passo:**
+
+O objetivo aqui é "Descrever" esses três conceitos fundamentais do Python, alinhando com a categoria "Entender" da Taxonomia de Bloom. Vamos abordar cada um separadamente e depois relacioná-los.
+
+*   **Passo 1: Descrever "Módulos"**
+
+    *   **O que é:** Um **módulo** em Python é simplesmente um arquivo de texto com a extensão `.py` que contém código Python. Este código pode incluir funções, classes, variáveis ou até mesmo outras instruções executáveis.
+    *   **Propósito Principal:** O principal objetivo de um módulo é organizar o código, tornando-o mais legível e reutilizável. Em vez de ter todo o código de um programa em um único arquivo gigantesco, podemos dividi-lo em módulos menores e lógicos, cada um responsável por uma parte específica da funcionalidade. Isso facilita a manutenção e a colaboração em projetos grandes.
+    *   **Estrutura/Composição:** É um arquivo `.py`. Por exemplo, se tivermos um arquivo chamado `minhas_funcoes.py` com o seguinte conteúdo:
+        ```python
+        # minhas_funcoes.py
+        def saudacao(nome):
+            return f"Olá, {nome}!"
+
+        PI = 3.14159
+        ```
+    *   **Exemplo de Utilização:** Para usar o código de `minhas_funcoes.py` em outro script Python (digamos, `programa_principal.py`), usamos a instrução `import`:
+        ```python
+        # programa_principal.py
+        import minhas_funcoes
+
+        mensagem = minhas_funcoes.saudacao("Mundo")
+        print(mensagem)
+        print(f"O valor de PI é: {minhas_funcoes.PI}")
+        ```
+        Ao importar `minhas_funcoes`, todas as funções, classes e variáveis definidas nele se tornam acessíveis através do prefixo `minhas_funcoes.`.
+
+*   **Passo 2: Descrever "Pacotes"**
+
+    *   **O que é:** Um **pacote** em Python é uma forma de organizar módulos relacionados em uma estrutura de diretórios hierárquica. É essencialmente uma pasta (diretório) que contém outros módulos e, opcionalmente, sub-pacotes. A chave para um diretório ser reconhecido como um pacote por Python é a presença de um arquivo especial chamado `__init__.py` (que pode estar vazio) dentro dele. A partir do Python 3.3, esse arquivo `__init__.py` se tornou opcional para pacotes simples (namespace packages), mas ainda é uma boa prática para indicar explicitamente que um diretório é um pacote.
+    *   **Propósito Principal:** Pacotes servem para organizar módulos de forma mais estruturada, especialmente em projetos maiores, e para evitar conflitos de nomes (name collisions) entre módulos que possam ter nomes iguais, mas que pertencem a funcionalidades diferentes. Eles criam um "namespace" (espaço de nomes) para seus módulos.
+    *   **Estrutura/Composição:** Um diretório com um arquivo `__init__.py` e um ou mais arquivos `.py` (módulos).
+        ```
+        meu_projeto/
+        ├── __init__.py
+        ├── utilidades/
+        │   ├── __init__.py
+        │   ├── formatacao.py
+        │   └── validacao.py
+        └── dados/
+            ├── __init__.py
+            └── processamento.py
+        ```
+        Neste exemplo, `meu_projeto` é um pacote, e `utilidades` e `dados` são sub-pacotes.
+    *   **Exemplo de Util

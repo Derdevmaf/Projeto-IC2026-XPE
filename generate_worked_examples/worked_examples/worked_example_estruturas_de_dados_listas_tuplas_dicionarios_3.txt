@@ -1,0 +1,5 @@
+**Worked Example: Geração de Relatório de Notas Acadêmicas**
+
+**1. Enunciado do Problema/Tarefa:**
+
+Você foi contratado para **gerar** um sistema simplificado de gerenciamento de notas acadêmicas em Python. A partir de uma lista bruta de

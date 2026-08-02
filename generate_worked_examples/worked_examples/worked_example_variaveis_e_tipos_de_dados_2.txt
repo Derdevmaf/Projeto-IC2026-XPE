@@ -1,0 +1,34 @@
+No trecho de código Python abaixo, assinale cada variável e identifique o tipo de dado que ela armazena.
+
+```python
+# Código Python
+nome = "Alice"
+idade = 30
+altura = 1.75
+is_estudante = True
+mensagem = 'Olá, mundo!'
+```
+
+**Resolução Comentada (Passo a passo):**
+
+Vamos analisar cada linha do código fornecido para assinalar as variáveis e determinar seus tipos de dados correspondentes.
+
+1.  **`nome = "Alice"`**
+    *   **Variável assinalada:** `nome`
+    *   **Valor:** `"Alice"`
+    *   **Tipo de Dado assinalado:** `str` (string). Em Python, uma `string` é uma sequência de caracteres (letras, números, símbolos) que é delimitada por aspas simples (`'`) ou duplas (`"`). O valor `"Alice"` é um texto, portanto, é do tipo `str`.
+
+2.  **`idade = 30`**
+    *   **Variável assinalada:** `idade`
+    *   **Valor:** `30`
+    *   **Tipo de Dado assinalado:** `int` (inteiro). O tipo `int` representa números inteiros, ou seja, números sem casas decimais, sejam eles positivos, negativos ou zero. O valor `30` se encaixa perfeitamente nesta definição.
+
+3.  **`altura = 1.75`**
+    *   **Variável assinalada:** `altura`
+    *   **Valor:** `1.75`
+    *   **Tipo de Dado assinalado:** `float` (ponto flutuante). O tipo `float` é usado para números reais que possuem casas decimais. `1.75` tem uma parte decimal, o que o classifica como um `float`.
+
+4.  **`is_estudante = True`**
+    *   **Variável assinalada:** `is_estudante`
+    *   **Valor:** `True`
+    *   **Tipo de Dado assinalado:** `bool` (booleano). Um tipo booleano pode ter apenas dois valores: `True` (verdadeiro) ou `False` (falso). Eles são frequentemente utilizados para representar estados lógicos,

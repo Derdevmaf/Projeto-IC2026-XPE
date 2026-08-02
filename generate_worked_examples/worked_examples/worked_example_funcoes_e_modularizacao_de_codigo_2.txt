@@ -1,0 +1,42 @@
+## Exemplo Resolvido: Funções e Modularização de Código (Python)
+
+**Verbo da Taxonomia de Bloom:** Completar (Lembrar)
+
+### 1. Enunciado do Problema
+
+Complete o código Python abaixo para definir uma função chamada `calcular_area_retangulo`. Esta função deve receber dois parâmetros, `largura` e `altura`, e retornar o produto desses dois valores. Em seguida, complete a chamada dessa função e a exibição do resultado para um retângulo com largura 10 e altura 5.
+
+```python
+# Definição da função
+def calcular_area_retangulo(______, ______):
+    area = ______ * ______
+    return ______
+
+# Exemplo de uso da função
+largura_exemplo = 10
+altura_exemplo = 5
+
+# Chamada da função e armazenamento do resultado
+resultado_area = calcular_area_retangulo(______, ______)
+
+# Exibição do resultado
+print(f"A área do retângulo é: {______}")
+```
+
+### 2. Resolução Comentada, Passo a Passo
+
+Para completar o código, precisamos relembrar a sintaxe básica de definição e chamada de funções em Python, e como elas operam com parâmetros e valores de retorno.
+
+**Passo 1: Completar a definição da função `calcular_area_retangulo`**
+
+A primeira parte do exercício pede para definir a função. Uma função em Python é definida usando a palavra-chave `def`, seguida pelo nome da função e uma lista de parâmetros entre parênteses.
+
+```python
+# Definição da função
+def calcular_area_retangulo(largura, altura): # Nomes dos parâmetros
+    area = largura * altura                 # Cálculo da área usando os parâmetros
+    return area                             # Retorna o valor calculado
+```
+
+*   **`largura, altura`**: Estes são os parâmetros da função. Eles atuam como variáveis locais dentro da função, que receberão os valores passados quando a função for chamada. Lembrar de como os parâmetros são declarados é fundamental aqui.
+*   **`area = largura * altura`**: Dentro do corpo da função, calculamos a

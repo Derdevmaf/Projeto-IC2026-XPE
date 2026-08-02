@@ -1,0 +1,33 @@
+**Enunciado do Problema:**
+
+Elabore um mapa conceitual que represente as principais características e distinções entre as estruturas de dados fundamentais em Python: Listas, Tuplas e Dicionários. O mapa deve abordar aspectos como mutabilidade, ordenação, forma de indexação/acesso e suas respectivas sintaxes, além de mencionar brevemente seus casos de uso típicos. O objetivo é analisar criticamente as propriedades de cada estrutura e suas relações.
+
+---
+
+**Resolução Comentada, Passo a Passo:**
+
+Para elaborar um mapa conceitual eficaz, precisamos desmembrar cada estrutura de dados e identificar suas propriedades essenciais, bem como suas semelhanças e diferenças.
+
+1.  **Identificação dos Conceitos Centrais:**
+    Começamos com os três conceitos principais que estarão no centro do nosso mapa ou como ramos primários:
+    *   Lista
+    *   Tupla
+    *   Dicionário
+
+2.  **Análise das Propriedades Individuais (Desconstruindo cada estrutura):**
+
+    *   **Lista:**
+        *   **Tipo de Coleção:** Coleção de itens.
+        *   **Mutabilidade:** *Mutável*. Isso significa que seus elementos podem ser adicionados, removidos ou modificados após a criação da lista.
+        *   **Ordenação:** *Ordenada*. Os itens mantêm a ordem em que foram inseridos.
+        *   **Indexação/Acesso:** Acessada por *índices numéricos* (começando do 0). Permite fatiamento (slicing).
+        *   **Sintaxe:** Delimitada por *colchetes* `[]`. Ex: `[1, "a", True]`.
+        *   **Conteúdo:** Permite itens duplicados. Pode conter itens de diferentes tipos.
+        *   **Caso de Uso Típico:** Quando a ordem é importante e os dados precisam ser frequentemente alterados, como uma fila de espera ou uma coleção de resultados em tempo real.
+
+    *   **Tupla:**
+        *   **Tipo de Coleção:** Coleção de itens.
+        *   **Mutabilidade:** *Imutável*. Uma vez criada, seus elementos não podem ser alterados, adicionados ou removidos.
+        *   **Ordenação:** *Ordenada*. Assim como as listas, os itens mantêm a ordem de inserção.
+        *   **Indexação/Acesso:** Acessada por *índices numéricos* (começando do 0). Permite fatiamento (slicing).
+        *   **Sintaxe:** Delimitada por *parênteses* `()`. Ex: `(1

@@ -1,0 +1,1 @@
+Imagine que você recebeu um script Python que processa uma lista de números inteiros para calcular a soma dos quadrados dos números ímpares. O código original, porém, é um bloco único e contínuo, o que o torna difícil de ler, reutilizar e manter. Sua tarefa

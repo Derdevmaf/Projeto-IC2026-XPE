@@ -1,0 +1,19 @@
+## Worked Example: Análise de Vendas com Estruturas de Dados em Python
+
+### 1. Enunciado do Problema/Tarefa a ser Resolvida
+
+Uma loja de eletrônicos registrou suas vendas mensais de diversos produtos em um sistema que gera uma lista de registros, onde cada registro é um dicionário contendo o nome do produto, o mês da venda e o valor total de vendas para aquele produto no mês. O gerente da loja precisa de uma visão consolidada para entender quais produtos tiveram o melhor desempenho.
+
+**Tarefa:** Dada a lista de registros de vendas, **elabore uma tabela** que apresente o total de vendas acumuladas para cada produto único, em todos os meses registrados.
+
+**Dados de Entrada:**
+```python
+dados_vendas = [
+    {'produto': 'Teclado Mecânico', 'mes': 'Janeiro', 'vendas': 150},
+    {'produto': 'Mouse Gamer', 'mes': 'Janeiro', 'vendas': 120},
+    {'produto': 'Monitor Ultrawide', 'mes': 'Janeiro', 'vendas': 300},
+    {'produto': 'Teclado Mecânico', 'mes': 'Fevereiro', 'vendas': 170},
+    {'produto': 'Mouse Gamer', 'mes': 'Fevereiro', 'vendas': 130},
+    {'produto': 'Monitor Ultrawide', 'mes': 'Fevereiro', 'vendas': 320},
+    {'produto': 'Webcam HD', 'mes': 'Fevereiro', 'vendas': 80},
+    {'produto': 'Teclado Mecânico', 'mes': 'Março', 'vendas': 1
