@@ -1,0 +1,4 @@
+Enunciado do problema: Construir um programa em Python que crie um arquivo de texto com o nome "lista_de_compras.txt" e insira nele uma lista de compras de supermercado. Resolução: Primeiro, precisamos importar a biblioteca necessária para manipular arquivos, que é a biblioteca padrão do Python. Em seguida, precisamos criar o arquivo de texto utilizando a função open(). O modo 'w' é utilizado para criar um arquivo novo ou sobrescrever um existente. Depois, podemos utilizar a função write() para inserir a lista de compras no arquivo. Por fim, é importante fechar o arquivo com a função close(). Exemplo de código: arquivo = open('lista_de_compras.txt', 'w'); arquivo.write('Leite
+Ovos
+Pão
+'); arquivo.close(); Conclusão: O programa construído cria um arquivo de texto com a lista de compras e demonstra como manipular arquivos em Python.

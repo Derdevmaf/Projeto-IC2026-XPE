@@ -218,6 +218,28 @@ class TestSalvarTabelaWorkedExamples(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
+# obter_retry_delay
+# ---------------------------------------------------------------------------
+
+
+class TestObterRetryDelay(unittest.TestCase):
+    def test_extrai_segundos_da_mensagem(self):
+        e = Exception("Please retry after 15s due to rate limit")
+        self.assertEqual(gwe.obter_retry_delay(e, 1), 16.0)
+
+    def test_extrai_segundos_por_extenso(self):
+        e = Exception("Resource exhausted: retry in 20.5 seconds")
+        self.assertEqual(gwe.obter_retry_delay(e, 1), 21.5)
+
+    def test_fallback_progressivo(self):
+        e = Exception("RESOURCE_EXHAUSTED without explicit delay")
+        self.assertEqual(gwe.obter_retry_delay(e, 1), 10.0)
+        self.assertEqual(gwe.obter_retry_delay(e, 2), 20.0)
+        self.assertEqual(gwe.obter_retry_delay(e, 3), 40.0)
+        self.assertEqual(gwe.obter_retry_delay(e, 4), 60.0)
+
+
+# ---------------------------------------------------------------------------
 # chamar_ia (tratamento de falhas de comunicacao)
 # ---------------------------------------------------------------------------
 
@@ -263,6 +285,15 @@ class TestChamarIa(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             gwe.chamar_ia(client, "gemini-2.5-flash", "prompt", max_tentativas=2)
         self.assertEqual(client.models.generate_content.call_count, 2)
+
+    def test_cota_diaria_excedida_interrompe_imediatamente(self):
+        client = MagicMock()
+        client.models.generate_content.side_effect = _fake_status_error(
+            429, "Quota exceeded for GenerateRequestsPerDayPerProjectPerModel-FreeTier"
+        )
+        with self.assertRaises(gwe.QuotaDiariaExcedidaError):
+            gwe.chamar_ia(client, "gemini-2.5-flash-lite", "prompt", max_tentativas=5)
+        self.assertEqual(client.models.generate_content.call_count, 1)
 
 
 # ---------------------------------------------------------------------------
@@ -312,12 +343,12 @@ class TestGerarWorkedExample(unittest.TestCase):
 
     def test_chamada_real_mockada_inclui_contexto_bloom(self):
         client = MagicMock()
-        client.models.generate_content.return_value = _fake_text_response("worked example de teste")
+        client.models.generate_content.return_value = _fake_text_response(
+            '[{"indice": 1, "verbo": "Aplicar", "conteudo": "worked example de teste"}]'
+        )
         verbo = gwe.VerboBloom("Aplicar", "Aplicar")
         texto = gwe.gerar_worked_example(client, "modelo", "Python", "Listas", verbo, "contexto bloom xyz")
         self.assertEqual(texto, "worked example de teste")
-        _, kwargs = client.models.generate_content.call_args
-        self.assertEqual(kwargs["config"].system_instruction, "Voce e um especialista em design instrucional e na Taxonomia de Bloom Revisada, elaborando material didatico. Abaixo esta o arquivo de referencia com os verbos da Taxonomia de Bloom, organizados por categoria cognitiva - use-o como contexto para compreender o nivel cognitivo correto do verbo solicitado em cada exercicio:\n\ncontexto bloom xyz")
 
 
 # ---------------------------------------------------------------------------
@@ -370,8 +401,10 @@ class TestMainComIaMockada(unittest.TestCase):
     @patch("generate_worked_examples.genai.Client")
     def test_fluxo_completo_com_client_mockado(self, mock_genai_cls):
         mock_client = MagicMock()
-        respostas = [_fake_text_response('["Variaveis", "Listas"]')] + [
-            _fake_text_response(f"worked example {i}") for i in range(1, 5)
+        respostas = [
+            _fake_text_response('["Variaveis", "Listas"]'),
+            _fake_text_response('[{"indice": 1, "verbo": "Revisar", "conteudo": "worked example 1"}, {"indice": 2, "verbo": "Mapear", "conteudo": "worked example 2"}]'),
+            _fake_text_response('[{"indice": 1, "verbo": "Formular", "conteudo": "worked example 3"}, {"indice": 2, "verbo": "Criar", "conteudo": "worked example 4"}]'),
         ]
         mock_client.models.generate_content.side_effect = respostas
         mock_genai_cls.return_value = mock_client

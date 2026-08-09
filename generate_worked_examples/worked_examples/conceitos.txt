@@ -1,5 +1,15 @@
-Variáveis e Tipos de Dados
-Estruturas de Controle de Fluxo
+Variáveis
+Tipos de Dados
+Estruturas de Controle
+Laços de Repetição
 Funções
-Estruturas de Dados (Listas, Tuplas, Dicionários)
-Módulos e Pacotes
+Módulos
+Tratamento de Erros
+Manipulação de Arquivos
+Estruturas de Dados
+Listas
+Tuplas
+Dicionários
+Programação Orientada a Objetos
+Bibliotecas e Frameworks
+Desenvolvimento de Aplicações

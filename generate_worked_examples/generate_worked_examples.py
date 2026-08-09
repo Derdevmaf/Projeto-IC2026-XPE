@@ -4,28 +4,34 @@ generate_worked_examples.py
 
 Gera automaticamente uma base de "worked examples" (exemplos resolvidos)
 para apoiar a construcao de uma sequencia didatica baseada em conceitos,
-utilizando um modelo de IA (Claude, via API da Anthropic).
+utilizando um modelo de IA (Groq, OpenRouter ou Gemini).
 
 Fluxo geral:
     1) A IA gera K conceitos fundamentais associados a um tema (--C).
-    2) Para cada conceito, sao gerados N worked examples (--N), cada um
-       exercitando um verbo sorteado aleatoriamente da Taxonomia de
-       Bloom Revisada (arquivo bloom_verbs.txt).
+    2) Para cada conceito, sao gerados N worked examples (--N) em UMA UNICA
+       chamada de API por conceito (JSON em lote), cada um exercitando um
+       verbo sorteado da Taxonomia de Bloom Revisada (bloom_verbs.txt).
     3) Cada worked example e salvo em um arquivo de texto individual,
        dentro da pasta worked_examples/.
 
 Uso:
-    python generate_worked_examples.py --C <numero_conceitos> --N <numero_exemplos>
+    python generate_worked_examples.py --C <num_conceitos> --N <num_exemplos>
 
 Exemplos:
-    python generate_worked_examples.py --C 5 --N 3
+    python generate_worked_examples.py --C 15 --N 3
+    python generate_worked_examples.py --C 15 --N 3 --provider groq
+    python generate_worked_examples.py --C 5 --N 3 --provider openrouter
     python generate_worked_examples.py --C 3 --N 2 --dry-run
-    python generate_worked_examples.py --C 4 --N 2 --tema "Estruturas de Dados" --model claude-haiku-4-5-20251001
+    python generate_worked_examples.py --C 4 --N 2 --tema "Estruturas de Dados"
+
+Provedores suportados (--provider):
+    groq       — Groq (recomendado; ~14400 req/dia gratis). Requer GROQ_API_KEY.
+    openrouter — OpenRouter (~200 req/dia por modelo gratis). Requer OPENROUTER_API_KEY.
+    gemini     — Google Gemini (limite de 20 req/dia no plano gratis). Requer GEMINI_API_KEY.
 
 Requisitos:
     - Python 3.9+
-    - Variavel de ambiente ANTHROPIC_API_KEY definida (ou um arquivo .env
-      com essa variavel), exceto ao usar --dry-run.
+    - Chave de API do provedor escolhido no arquivo .env (copie .env.example).
     - Dependencias listadas em requirements.txt (pip install -r requirements.txt)
 """
 
@@ -53,16 +59,19 @@ try:
 except ImportError:
     pass
 
+# openai SDK — usado pelo Groq e pelo OpenRouter (interface OpenAI-compat)
+try:
+    import openai as openai_lib
+except ImportError:
+    openai_lib = None  # type: ignore
+
+# google-genai SDK — usado apenas quando --provider gemini
 try:
     from google import genai
-    from google.genai import errors
+    from google.genai import errors as genai_errors
 except ImportError:
-    print(
-        "ERRO: a biblioteca 'google-genai' nao esta instalada.\n"
-        "Instale as dependencias com: pip install -r requirements.txt",
-        file=sys.stderr,
-    )
-    sys.exit(1)
+    genai = None  # type: ignore
+    genai_errors = None  # type: ignore
 
 
 # ---------------------------------------------------------------------------
@@ -74,13 +83,32 @@ BLOOM_VERBS_PATH = SCRIPT_DIR / "bloom_verbs.txt"
 OUTPUT_DIR = SCRIPT_DIR / "worked_examples"
 
 TEMA_PADRAO = "Programação em Python"
-MODELO_PADRAO = "gemini-2.5-flash"
+PROVEDOR_PADRAO = "groq"
 
-MAX_TENTATIVAS_IA = 3          # numero de tentativas por chamada a IA
+# Modelos padrao por provedor
+MODELOS_PADRAO: dict[str, str] = {
+    "groq":       "llama-3.3-70b-versatile",
+    "openrouter": "openrouter/auto",
+    "gemini":     "gemini-2.5-flash-lite",
+}
+
+PROVEDORES_VALIDOS = tuple(MODELOS_PADRAO.keys())
+
+# URLs base dos provedores OpenAI-compat
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+GROQ_BASE_URL       = "https://api.groq.com/openai/v1"
+
+MAX_TENTATIVAS_IA = 5          # tentativas por chamada a IA
 ESPERA_BASE_SEGUNDOS = 2       # base do backoff exponencial (2s, 4s, 8s, ...)
 MAX_TOKENS_CONCEITOS = 1024
 MAX_TOKENS_WORKED_EXAMPLE = 1500
 AVISO_MUITAS_CHAMADAS = 60     # a partir de quantas chamadas exibir um aviso
+
+
+class QuotaDiariaExcedidaError(Exception):
+    """Excecao lancada quando a cota diaria de requisicoes e atingida."""
+
+    pass
 
 
 @dataclass
@@ -104,7 +132,13 @@ def ler_argumentos(argv: list[str] | None = None) -> argparse.Namespace:
             "Gera worked examples com IA para apoiar a construcao de uma "
             "sequencia didatica baseada em conceitos."
         ),
-        epilog="Exemplo: python generate_worked_examples.py --C 5 --N 3",
+        epilog=(
+            "Exemplos:\n"
+            "  python generate_worked_examples.py --C 15 --N 3\n"
+            "  python generate_worked_examples.py --C 15 --N 3 --provider groq\n"
+            "  python generate_worked_examples.py --C 5 --N 3 --provider openrouter\n"
+            "  python generate_worked_examples.py --C 3 --N 2 --dry-run"
+        ),
     )
     parser.add_argument(
         "--C",
@@ -125,10 +159,25 @@ def ler_argumentos(argv: list[str] | None = None) -> argparse.Namespace:
         help=f"Tema/dominio de conteudo a ser utilizado (padrao: '{TEMA_PADRAO}').",
     )
     parser.add_argument(
+        "--provider",
+        type=str,
+        default=PROVEDOR_PADRAO,
+        choices=list(PROVEDORES_VALIDOS),
+        help=(
+            f"Provedor de IA a usar (padrao: '{PROVEDOR_PADRAO}'). "
+            "groq=Groq (~14400 req/dia gratis); "
+            "openrouter=OpenRouter (~200 req/dia gratis); "
+            "gemini=Google Gemini (20 req/dia no plano gratis)."
+        ),
+    )
+    parser.add_argument(
         "--model",
         type=str,
-        default=MODELO_PADRAO,
-        help=f"Modelo Gemini a ser utilizado nas chamadas de IA (padrao: '{MODELO_PADRAO}').",
+        default=None,
+        help=(
+            "Modelo a ser utilizado. Se omitido, usa o modelo padrao do provedor: "
+            + ", ".join(f"{p}='{m}'" for p, m in MODELOS_PADRAO.items()) + "."
+        ),
     )
     parser.add_argument(
         "--seed",
@@ -137,12 +186,21 @@ def ler_argumentos(argv: list[str] | None = None) -> argparse.Namespace:
         help="Semente aleatoria opcional, para tornar reprodutivel o sorteio dos verbos.",
     )
     parser.add_argument(
+        "--delay",
+        type=float,
+        default=0.0,
+        help=(
+            "Tempo de espera fixo em segundos entre chamadas sucessivas a API para evitar "
+            "exceder a cota de requisicoes por minuto."
+        ),
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help=(
             "Executa todo o fluxo (conceitos, verbos, arquivos) sem chamar a API de "
-            "IA de verdade. Util para testar a estrutura de pastas/arquivos e a "
-            "instalacao sem gastar creditos e sem precisar de GEMINI_API_KEY."
+            "IA de verdade. Util para testar a estrutura de pastas/arquivos sem "
+            "precisar de chave de API."
         ),
     )
 
@@ -152,6 +210,10 @@ def ler_argumentos(argv: list[str] | None = None) -> argparse.Namespace:
         parser.error("--C deve ser um numero inteiro positivo.")
     if args.N <= 0:
         parser.error("--N deve ser um numero inteiro positivo.")
+
+    # Aplica modelo padrao do provedor se --model nao foi fornecido
+    if args.model is None:
+        args.model = MODELOS_PADRAO[args.provider]
 
     return args
 
@@ -164,19 +226,6 @@ def ler_argumentos(argv: list[str] | None = None) -> argparse.Namespace:
 def carregar_verbos_bloom(filepath: Path) -> list[VerboBloom]:
     """
     Le o arquivo bloom_verbs.txt e retorna a lista de verbos disponiveis.
-
-    Regras de leitura:
-      - linhas em branco sao ignoradas;
-      - linhas iniciadas com '#' sao tratadas como comentarios/cabecalhos de
-        categoria (ex.: "# Analisar") e nao sao usadas como verbos, mas
-        atualizam a categoria associada aos verbos seguintes;
-      - verbos duplicados (o mesmo verbo pode aparecer em mais de uma
-        categoria no documento de origem) sao mantidos uma unica vez, para
-        que o sorteio aleatorio nao fique enviesado.
-
-    Levanta:
-        FileNotFoundError: se o arquivo nao existir.
-        ValueError: se o arquivo existir mas nao contiver nenhum verbo valido.
     """
     if not filepath.exists():
         raise FileNotFoundError(
@@ -259,82 +308,260 @@ def gerar_slug(texto: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def obter_cliente_ia() -> genai.Client:
-    """Cria o cliente da API Gemini, validando a presenca da chave de API."""
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        print(
-            "ERRO: a variavel de ambiente GEMINI_API_KEY nao foi encontrada.\n"
-            "Defina sua chave de API (copie '.env.example' para '.env' e "
-            "preencha com sua chave, ou exporte a variavel no terminal) antes "
-            "de executar o programa. Alternativamente, use --dry-run para "
-            "testar o programa sem chamar a IA de verdade.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+def obter_cliente_ia(provider: str) -> object:
+    """
+    Cria e retorna o cliente de IA adequado para o provedor informado.
 
-    return genai.Client(api_key=api_key)
+    Retorna:
+      - Para 'groq' e 'openrouter': instancia de openai.OpenAI configurada
+        com a base_url e api_key corretas.
+      - Para 'gemini': instancia de google.genai.Client.
+    """
+    if provider == "groq":
+        if openai_lib is None:
+            print(
+                "ERRO: a biblioteca 'openai' nao esta instalada.\n"
+                "Instale as dependencias com: pip install -r requirements.txt",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        api_key = os.environ.get("GROQ_API_KEY")
+        if not api_key:
+            print(
+                "ERRO: a variavel de ambiente GROQ_API_KEY nao foi encontrada.\n"
+                "Defina sua chave em '.env' (copie '.env.example') ou exporte no terminal.\n"
+                "Gere uma chave gratuita em: https://console.groq.com/keys\n"
+                "Use --dry-run para testar sem chave de API.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        return openai_lib.OpenAI(api_key=api_key, base_url=GROQ_BASE_URL)
+
+    elif provider == "openrouter":
+        if openai_lib is None:
+            print(
+                "ERRO: a biblioteca 'openai' nao esta instalada.\n"
+                "Instale as dependencias com: pip install -r requirements.txt",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        api_key = os.environ.get("OPENROUTER_API_KEY")
+        if not api_key:
+            print(
+                "ERRO: a variavel de ambiente OPENROUTER_API_KEY nao foi encontrada.\n"
+                "Defina sua chave em '.env' (copie '.env.example') ou exporte no terminal.\n"
+                "Gere uma chave gratuita em: https://openrouter.ai/keys\n"
+                "Use --dry-run para testar sem chave de API.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        return openai_lib.OpenAI(api_key=api_key, base_url=OPENROUTER_BASE_URL)
+
+    else:  # gemini
+        if genai is None:
+            print(
+                "ERRO: a biblioteca 'google-genai' nao esta instalada.\n"
+                "Instale as dependencias com: pip install -r requirements.txt",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            print(
+                "ERRO: a variavel de ambiente GEMINI_API_KEY nao foi encontrada.\n"
+                "Defina sua chave em '.env' (copie '.env.example') ou exporte no terminal.\n"
+                "Use --dry-run para testar sem chave de API.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        return genai.Client(api_key=api_key)
+
+
+def obter_retry_delay(e: Exception, tentativa: int) -> float:
+    """
+    Extrai o tempo de espera (retry delay) recomendado pela API Gemini a partir
+    da mensagem ou detalhes do erro. Caso nao encontre um tempo especifico,
+    retorna um tempo de espera seguro (minimo 10s, dobrando a cada tentativa,
+    maximo 60s) para nao estourar a cota de requisicoes por minuto (ex.: 10 RPM).
+    """
+    mensagem = str(e)
+
+    # 1. Procura por padroes como "retry after 12.5s", "retry in 10s", "retry_delay: 15"
+    match = re.search(
+        r"retry\s*(?:after|in|delay[:\s]+)?\s*([0-9]+(?:\.[0-9]+)?)\s*s",
+        mensagem,
+        re.IGNORECASE,
+    )
+    if match:
+        try:
+            return float(match.group(1)) + 1.0  # +1s de margem de seguranca
+        except ValueError:
+            pass
+
+    # 2. Procura por "wait X seconds" ou "X seconds"
+    match_sec = re.search(
+        r"([0-9]+(?:\.[0-9]+)?)\s*(?:seconds|segundos)",
+        mensagem,
+        re.IGNORECASE,
+    )
+    if match_sec:
+        try:
+            return float(match_sec.group(1)) + 1.0
+        except ValueError:
+            pass
+
+    # 3. Fallback seguro para limite de 10 RPM: 10s, 20s, 40s, 60s...
+    return float(min(60, 10 * (2 ** (tentativa - 1))))
+
+
+def _chamar_openai_compat(
+    client: "openai_lib.OpenAI",
+    model: str,
+    user_prompt: str,
+    system_prompt: str | None,
+    max_tokens: int,
+) -> str:
+    """Realiza uma chamada via OpenAI Chat Completions API (Groq / OpenRouter)."""
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": user_prompt})
+
+    resposta = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        max_tokens=max_tokens,
+    )
+    conteudo = resposta.choices[0].message.content
+    return conteudo.strip() if conteudo else ""
+
+
+def _chamar_gemini(
+    client: "genai.Client",
+    model: str,
+    user_prompt: str,
+    system_prompt: str | None,
+    max_tokens: int,
+) -> str:
+    """Realiza uma chamada via SDK nativo do Google Gemini."""
+    config_kwargs: dict = {"max_output_tokens": max_tokens}
+    if system_prompt:
+        config_kwargs["system_instruction"] = system_prompt
+
+    resposta = client.models.generate_content(
+        model=model,
+        contents=user_prompt,
+        config=genai.types.GenerateContentConfig(**config_kwargs),
+    )
+    return resposta.text.strip() if resposta.text else ""
+
+
+def _e_erro_cota_diaria(msg: str) -> bool:
+    """Retorna True se a mensagem de erro indica esgotamento de cota diaria (RPD)."""
+    indicadores = [
+        "GenerateRequestsPerDay",
+        "PerDay",
+        "daily",
+        "day quota",
+        "rate_limit_exceeded",  # Groq usa este para cota diaria
+    ]
+    msg_upper = msg.upper()
+    return any(ind.upper() in msg_upper for ind in indicadores)
+
+
+def _e_erro_rate_limit(msg: str, status_code: int | None) -> bool:
+    """Retorna True se o erro e de limite de requisicoes por minuto (RPM / 429)."""
+    if status_code == 429:
+        return True
+    msg_upper = msg.upper()
+    return "429" in msg or "RESOURCE_EXHAUSTED" in msg_upper or "RATELIMIT" in msg_upper or "RATE_LIMIT" in msg_upper
 
 
 def chamar_ia(
-    client: genai.Client,
+    client: object,
     model: str,
     user_prompt: str,
     system_prompt: str | None = None,
     max_tokens: int = MAX_TOKENS_WORKED_EXAMPLE,
     max_tentativas: int = MAX_TENTATIVAS_IA,
+    delay_entre_chamadas: float = 0.0,
+    provider: str = "groq",
 ) -> str:
     """
-    Realiza uma chamada a API do Gemini, com tratamento de falhas de
-    comunicacao (erros de rede, limite de requisicoes, erros do servidor)
-    por meio de novas tentativas com espera progressiva (backoff exponencial).
+    Realiza uma chamada a API de IA (Groq, OpenRouter ou Gemini), com
+    tratamento de falhas por meio de novas tentativas com espera inteligente.
 
     Retorna o texto da resposta.
 
     Levanta:
-        RuntimeError: se a chamada falhar de forma definitiva (erro do lado
-        do cliente, ex.: chave invalida) ou apos esgotar as tentativas.
+        QuotaDiariaExcedidaError: se a cota diaria (RPD) for excedida.
+        RuntimeError: se a chamada falhar definitivamente apos esgotar tentativas.
     """
     ultimo_erro: Exception | None = None
+    usa_gemini = (provider == "gemini")
 
     for tentativa in range(1, max_tentativas + 1):
         try:
-            config_kwargs: dict = {
-                "max_output_tokens": max_tokens,
-            }
-            if system_prompt:
-                config_kwargs["system_instruction"] = system_prompt
-
-            resposta = client.models.generate_content(
-                model=model,
-                contents=user_prompt,
-                config=genai.types.GenerateContentConfig(**config_kwargs)
-            )
-            return resposta.text.strip() if resposta.text else ""
-
-        except errors.APIError as e:
-            ultimo_erro = e
-            if e.code == 429:
-                _aguardar_nova_tentativa(tentativa, max_tentativas, "limite de requisicoes atingido")
-            elif e.code is not None and 500 <= e.code < 600:
-                _aguardar_nova_tentativa(
-                    tentativa, max_tentativas, f"erro no servidor da IA (HTTP {e.code})"
-                )
+            if usa_gemini:
+                texto = _chamar_gemini(client, model, user_prompt, system_prompt, max_tokens)  # type: ignore[arg-type]
             else:
-                # Erro do lado do cliente (ex.: chave invalida, requisicao
-                # malformada) - novas tentativas nao vao ajudar.
-                raise RuntimeError(
-                    f"Erro da API ao chamar o modelo de IA (HTTP {e.code}): {e.message}"
-                ) from e
+                texto = _chamar_openai_compat(client, model, user_prompt, system_prompt, max_tokens)  # type: ignore[arg-type]
+
+            if delay_entre_chamadas > 0:
+                time.sleep(delay_entre_chamadas)
+            return texto
+
+        except QuotaDiariaExcedidaError:
+            raise
+
         except Exception as e:
-            # Qualquer outro erro de conexao ou inesperado.
             ultimo_erro = e
-            _aguardar_nova_tentativa(tentativa, max_tentativas, f"erro inesperado: {e}")
+            msg_erro = str(e)
+            status_code: int | None = getattr(e, "status_code", None) or getattr(e, "code", None)
+
+            if _e_erro_cota_diaria(msg_erro):
+                print(
+                    "\n    [ERRO CRITICO - COTA DIARIA EXCEDIDA] "
+                    "A cota diaria de requisicoes da API foi atingida. "
+                    "Encerrando para evitar retentativas desnecessarias."
+                )
+                raise QuotaDiariaExcedidaError(
+                    "Cota diaria de requisicoes atingida."
+                ) from e
+
+            elif _e_erro_rate_limit(msg_erro, status_code):
+                _aguardar_rate_limit(e, tentativa, max_tentativas)
+
+            elif status_code is not None and 500 <= status_code < 600:
+                _aguardar_nova_tentativa(
+                    tentativa, max_tentativas, f"erro no servidor da IA (HTTP {status_code})"
+                )
+
+            # Gemini-especifico: APIError com code nao-5xx e nao-429 => erro permanente
+            elif genai_errors is not None and isinstance(e, genai_errors.APIError):
+                raise RuntimeError(
+                    f"Erro da API Gemini (HTTP {status_code}): {getattr(e, 'message', str(e))}"
+                ) from e
+
+            else:
+                _aguardar_nova_tentativa(tentativa, max_tentativas, f"erro inesperado: {e}")
 
     raise RuntimeError(
         f"Falha ao comunicar com a IA apos {max_tentativas} tentativa(s). "
         f"Ultimo erro: {ultimo_erro}"
     )
+
+
+def _aguardar_rate_limit(e: Exception, tentativa: int, max_tentativas: int) -> None:
+    """Aguarda o tempo adequado antes de tentar novamente apos Rate Limit (429 / RPM)."""
+    if tentativa >= max_tentativas:
+        return
+    espera = obter_retry_delay(e, tentativa)
+    print(
+        f"    [Rate Limit] Limite de requisicoes por minuto (RPM) atingido. "
+        f"Aguardando {espera:.1f}s antes de tentar novamente (tentativa {tentativa}/{max_tentativas})..."
+    )
+    time.sleep(espera)
 
 
 def _aguardar_nova_tentativa(tentativa: int, max_tentativas: int, motivo: str) -> None:
@@ -383,11 +610,13 @@ def validar_json(texto: str) -> object | None:
 
 
 def gerar_conceitos(
-    client: genai.Client | None,
+    client: object | None,
     model: str,
     tema: str,
     k: int,
     dry_run: bool = False,
+    delay: float = 0.0,
+    provider: str = "groq",
 ) -> list[str]:
     """
     Realiza uma unica chamada a IA solicitando K conceitos fundamentais
@@ -415,7 +644,13 @@ def gerar_conceitos(
 
     for tentativa in range(1, MAX_TENTATIVAS_IA + 1):
         texto = chamar_ia(
-            client, model, user_prompt, system_prompt=system_prompt, max_tokens=MAX_TOKENS_CONCEITOS
+            client,
+            model,
+            user_prompt,
+            system_prompt=system_prompt,
+            max_tokens=MAX_TOKENS_CONCEITOS,
+            delay_entre_chamadas=delay,
+            provider=provider,
         )
         dados = validar_json(texto)
 
@@ -454,62 +689,152 @@ def gerar_conceitos(
 # ---------------------------------------------------------------------------
 
 
+def gerar_worked_examples_do_conceito(
+    client: object | None,
+    model: str,
+    tema: str,
+    conceito: str,
+    verbos: list[VerboBloom],
+    contexto_bloom: str,
+    dry_run: bool = False,
+    delay: float = 0.0,
+    provider: str = "groq",
+) -> list[dict[str, str]]:
+    """
+    Gera N worked examples para um único conceito em UMA ÚNICA CHAMADA à IA.
+    Retorna uma lista de dicionarios: [{"indice": int, "verbo": str, "conteudo": str}, ...].
+    """
+    n = len(verbos)
+    if dry_run:
+        exemplos = []
+        for idx, verbo in enumerate(verbos, start=1):
+            categoria_txt = f' (categoria "{verbo.categoria}")' if verbo.categoria else ""
+            conteudo = (
+                "[MODO --dry-run: conteudo simulado, nenhuma chamada real a IA foi feita]\n\n"
+                "Este arquivo representa o worked example que seria gerado pela IA para:\n"
+                f"  - Tema: {tema}\n"
+                f"  - Conceito: {conceito}\n"
+                f"  - Verbo da Taxonomia de Bloom: {verbo.verbo}{categoria_txt}\n\n"
+                "Execute novamente sem a flag --dry-run (com chave de API "
+                "configurada) para gerar o worked example real."
+            )
+            exemplos.append({
+                "indice": idx,
+                "verbo": verbo.verbo,
+                "conteudo": conteudo,
+            })
+        return exemplos
+
+    assert client is not None
+
+    verbos_formatados = "\n".join(
+        f"{idx}. Verbo \"{v.verbo}\"" + (f' (categoria "{v.categoria}")' if v.categoria else "")
+        for idx, v in enumerate(verbos, start=1)
+    )
+
+    system_prompt = (
+        "Voce e um especialista em design instrucional e na Taxonomia de "
+        "Bloom Revisada, elaborando material didatico. Responda SEMPRE e "
+        "SOMENTE com um JSON valido (uma lista de objetos), sem nenhum texto "
+        "adicional antes ou depois, e sem cercas de markdown (```).\n\n"
+        "Abaixo esta o arquivo de referencia com os verbos da Taxonomia de Bloom, "
+        "organizados por categoria cognitiva:\n\n"
+        f"{contexto_bloom}"
+    )
+
+    user_prompt = (
+        f'Gere EXATAMENTE {n} worked examples (exemplos resolvidos, explicados passo a passo) '
+        f'que exercitem o conceito "{conceito}", dentro do tema "{tema}".\n\n'
+        f'Cada worked example deve utilizar EXCLUSIVAMENTE o verbo da Taxonomia de Bloom correspondente abaixo:\n'
+        f'{verbos_formatados}\n\n'
+        'Cada worked example deve conter:\n'
+        '1. Um enunciado claro do problema/tarefa a ser resolvida;\n'
+        '2. A resolucao comentada, passo a passo, demonstrando o raciocinio;\n'
+        '3. Uma breve conclusao ou observacao final.\n\n'
+        f'Sinta-se livre para mencionar naturalmente outros conceitos relacionados a '
+        f'"{conceito}" sempre que isso ajudar a explicar o raciocinio.\n\n'
+        'Responda EXCLUSIVAMENTE em formato JSON contendo uma lista de objetos, no formato:\n'
+        '[\n'
+        '  {\n'
+        '    "indice": 1,\n'
+        '    "verbo": "<verbo exato utilizado>",\n'
+        '    "conteudo": "<texto completo do worked example 1>"\n'
+        '  },\n'
+        '  ...\n'
+        ']\n\n'
+        'Nao inclua nenhum texto fora do JSON.'
+    )
+
+    max_tokens_lote = min(8192, MAX_TOKENS_WORKED_EXAMPLE * n)
+
+    for tentativa in range(1, MAX_TENTATIVAS_IA + 1):
+        texto = chamar_ia(
+            client,
+            model,
+            user_prompt,
+            system_prompt=system_prompt,
+            max_tokens=max_tokens_lote,
+            delay_entre_chamadas=delay,
+            provider=provider,
+        )
+        dados = validar_json(texto)
+
+        if isinstance(dados, list) and len(dados) > 0:
+            exemplos_validos = []
+            for idx, item in enumerate(dados, start=1):
+                if isinstance(item, dict):
+                    v_str = str(item.get("verbo", verbos[idx - 1].verbo if idx <= len(verbos) else "")).strip()
+                    c_str = str(item.get("conteudo", "")).strip()
+                    if c_str:
+                        exemplos_validos.append({
+                            "indice": idx,
+                            "verbo": v_str or verbos[idx - 1].verbo,
+                            "conteudo": c_str,
+                        })
+
+            if len(exemplos_validos) == n:
+                return exemplos_validos
+            elif len(exemplos_validos) > 0:
+                print(
+                    f"  [aviso] a IA retornou {len(exemplos_validos)} exemplo(s) em vez de {n}. "
+                    "Prosseguindo com os exemplos recebidos."
+                )
+                return exemplos_validos
+
+        print(
+            f"  [aviso] a resposta da IA nao e um JSON valido de worked examples "
+            f"(tentativa {tentativa}/{MAX_TENTATIVAS_IA})."
+        )
+        user_prompt = (
+            "A resposta anterior nao estava em um formato JSON valido. "
+            f'Gere novamente a lista de {n} worked examples para o conceito "{conceito}", '
+            "respondendo EXCLUSIVAMENTE com uma lista JSON no formato "
+            '[{"indice": 1, "verbo": "...", "conteudo": "..."}, ...]. Nao inclua texto adicional.'
+        )
+
+    raise RuntimeError(
+        f"Nao foi possivel obter os worked examples em formato JSON valido da IA para o conceito '{conceito}' "
+        f"apos {MAX_TENTATIVAS_IA} tentativas."
+    )
+
+
+# Mantida para compatibilidade
 def gerar_worked_example(
-    client: genai.Client | None,
+    client: object | None,
     model: str,
     tema: str,
     conceito: str,
     verbo: VerboBloom,
     contexto_bloom: str,
     dry_run: bool = False,
+    delay: float = 0.0,
+    provider: str = "groq",
 ) -> str:
-    """
-    Gera um worked example (exemplo resolvido, passo a passo) que exercita
-    um conceito especifico usando um verbo sorteado da Taxonomia de Bloom.
-    O conteudo de bloom_verbs.txt e anexado ao contexto da chamada, para
-    que a IA utilize o verbo de forma pedagogicamente correta.
-    """
-    categoria_txt = f' (categoria "{verbo.categoria}")' if verbo.categoria else ""
-
-    if dry_run:
-        return (
-            "[MODO --dry-run: conteudo simulado, nenhuma chamada real a IA foi feita]\n\n"
-            "Este arquivo representa o worked example que seria gerado pela IA para:\n"
-            f"  - Tema: {tema}\n"
-            f"  - Conceito: {conceito}\n"
-            f"  - Verbo da Taxonomia de Bloom: {verbo.verbo}{categoria_txt}\n\n"
-            "Execute novamente sem a flag --dry-run (com GEMINI_API_KEY "
-            "configurada) para gerar o worked example real."
-        )
-
-    assert client is not None
-
-    system_prompt = (
-        "Voce e um especialista em design instrucional e na Taxonomia de "
-        "Bloom Revisada, elaborando material didatico. Abaixo esta o arquivo "
-        "de referencia com os verbos da Taxonomia de Bloom, organizados por "
-        "categoria cognitiva - use-o como contexto para compreender o nivel "
-        "cognitivo correto do verbo solicitado em cada exercicio:\n\n"
-        f"{contexto_bloom}"
+    res = gerar_worked_examples_do_conceito(
+        client, model, tema, conceito, [verbo], contexto_bloom,
+        dry_run=dry_run, delay=delay, provider=provider,
     )
-    user_prompt = (
-        f'Gere um worked example (exemplo resolvido, explicado passo a passo) que '
-        f'exercite o conceito "{conceito}", dentro do tema "{tema}", utilizando o '
-        f'verbo "{verbo.verbo}"{categoria_txt} da Taxonomia de Bloom.\n\n'
-        "O worked example deve conter:\n"
-        "1. Um enunciado claro do problema/tarefa a ser resolvida;\n"
-        "2. A resolucao comentada, passo a passo, demonstrando o raciocinio;\n"
-        "3. Uma breve conclusao ou observacao final.\n\n"
-        f'Sinta-se livre para mencionar naturalmente outros conceitos relacionados a '
-        f'"{conceito}" sempre que isso ajudar a explicar o raciocinio - essas relacoes '
-        "serao usadas posteriormente para mapear dependencias entre conceitos.\n\n"
-        "Responda apenas com o conteudo do worked example, em texto corrido, sem "
-        "comentarios meta sobre a tarefa em si."
-    )
-
-    return chamar_ia(
-        client, model, user_prompt, system_prompt=system_prompt, max_tokens=MAX_TOKENS_WORKED_EXAMPLE
-    )
+    return res[0]["conteudo"] if res else ""
 
 
 # ---------------------------------------------------------------------------
@@ -591,15 +916,20 @@ def main(argv: list[str] | None = None) -> int:
     print("=" * 60)
     print("generate_worked_examples.py")
     print("=" * 60)
+    print(f"Provedor...................: {args.provider}")
     print(f"Tema.......................: {args.tema}")
     print(f"Conceitos a gerar (--C)....: {args.C}")
     print(f"Worked examples/conceito (--N): {args.N}")
     print(f"Modelo.....................: {args.model}")
+    if args.delay > 0:
+        print(f"Delay entre chamadas.......: {args.delay}s")
     if args.dry_run:
         print("Modo.......................: DRY-RUN (sem chamadas reais a IA)")
     print("-" * 60)
 
-    estimativa_chamadas = args.C * args.N + 1
+    # Com geracao por lote (1 chamada por conceito), a estimativa de chamadas e:
+    # 1 chamada (para K conceitos) + K chamadas (1 por conceito) = K + 1 chamadas total.
+    estimativa_chamadas = args.C + 1
     if not args.dry_run and estimativa_chamadas > AVISO_MUITAS_CHAMADAS:
         print(
             f"[aviso] esta execucao fara aproximadamente {estimativa_chamadas} "
@@ -617,57 +947,79 @@ def main(argv: list[str] | None = None) -> int:
     contexto_bloom = BLOOM_VERBS_PATH.read_text(encoding="utf-8")
 
     # -- cliente de IA ------------------------------------------------------
-    client = None if args.dry_run else obter_cliente_ia()
-
-    # -- Etapa 1: geracao dos conceitos -------------------------------------
-    print("\nEtapa 1: gerando conceitos com a IA...")
-    try:
-        conceitos = gerar_conceitos(client, args.model, args.tema, args.C, dry_run=args.dry_run)
-    except RuntimeError as e:
-        print(f"ERRO: {e}", file=sys.stderr)
-        return 1
-
-    print(f"Conceitos gerados ({len(conceitos)}):")
-    for c in conceitos:
-        print(f"  - {c}")
-
-    # -- Etapas 2-4: para cada conceito, gerar N worked examples ------------
-    criar_diretorio_saida(OUTPUT_DIR)
-
-    caminho_json, caminho_txt = salvar_conceitos(OUTPUT_DIR, conceitos)
-    print(f"\nLista de conceitos salva em:")
-    print(f"  - {_caminho_para_exibicao(caminho_json)}")
-    print(f"  - {_caminho_para_exibicao(caminho_txt)}")
+    client = None if args.dry_run else obter_cliente_ia(args.provider)
 
     registros_csv: list[dict[str, str]] = []
     total_gerado = 0
     total_falhas = 0
 
-    print(f"\nEtapas 2-4: gerando {args.N} worked example(s) por conceito...")
-    for conceito in conceitos:
-        slug = gerar_slug(conceito)
-        print(f"\nConceito: {conceito}  (slug: {slug})")
+    try:
+        # -- Etapa 1: geracao dos conceitos -------------------------------------
+        print("\nEtapa 1: gerando conceitos com a IA...")
+        conceitos = gerar_conceitos(
+            client, args.model, args.tema, args.C,
+            dry_run=args.dry_run, delay=args.delay, provider=args.provider,
+        )
 
-        for indice in range(1, args.N + 1):
-            verbo = selecionar_verbo_aleatorio(verbos)
-            print(f"  [{indice}/{args.N}] verbo sorteado: '{verbo.verbo}'...", end=" ", flush=True)
+        print(f"Conceitos gerados ({len(conceitos)}):")
+        for c in conceitos:
+            print(f"  - {c}")
+
+        # -- Etapas 2-4: para cada conceito, gerar N worked examples em 1 chamada ----
+        criar_diretorio_saida(OUTPUT_DIR)
+
+        caminho_json, caminho_txt = salvar_conceitos(OUTPUT_DIR, conceitos)
+        print(f"\nLista de conceitos salva em:")
+        print(f"  - {_caminho_para_exibicao(caminho_json)}")
+        print(f"  - {_caminho_para_exibicao(caminho_txt)}")
+
+        print(f"\nEtapas 2-4: gerando {args.N} worked example(s) por conceito (1 chamada por conceito)...")
+        for conceito in conceitos:
+            slug = gerar_slug(conceito)
+            print(f"\nConceito: {conceito}  (slug: {slug})")
+
+            verbos_sorteados = [selecionar_verbo_aleatorio(verbos) for _ in range(args.N)]
+            v_nomes = ", ".join(f"'{v.verbo}'" for v in verbos_sorteados)
+            print(f"  [1 chamada para {args.N} exemplos] verbos sorteados: [{v_nomes}]...", end=" ", flush=True)
 
             try:
-                conteudo = gerar_worked_example(
-                    client, args.model, args.tema, conceito, verbo, contexto_bloom, dry_run=args.dry_run
+                exemplos_gerados = gerar_worked_examples_do_conceito(
+                    client,
+                    args.model,
+                    args.tema,
+                    conceito,
+                    verbos_sorteados,
+                    contexto_bloom,
+                    dry_run=args.dry_run,
+                    delay=args.delay,
+                    provider=args.provider,
                 )
-                caminho = salvar_worked_example(OUTPUT_DIR, slug, indice, conteudo)
-                exemplo_id = f"worked_example_{slug}_{indice}"
-                registros_csv.append({
-                    "id": exemplo_id,
-                    "verbo_bloom": verbo.verbo,
-                    "conceito": conceito,
-                })
-                print(f"OK -> {_caminho_para_exibicao(caminho)}")
-                total_gerado += 1
+                print("OK")
+                for item in exemplos_gerados:
+                    idx = item["indice"]
+                    v_usado = item["verbo"]
+                    conteudo = item["conteudo"]
+
+                    caminho = salvar_worked_example(OUTPUT_DIR, slug, idx, conteudo)
+                    exemplo_id = f"worked_example_{slug}_{idx}"
+                    registros_csv.append({
+                        "id": exemplo_id,
+                        "verbo_bloom": v_usado,
+                        "conceito": conceito,
+                    })
+                    print(f"    - Exemplo {idx}/{args.N} (verbo: '{v_usado}') -> {_caminho_para_exibicao(caminho)}")
+                    total_gerado += 1
             except RuntimeError as e:
                 print(f"FALHOU ({e})")
                 total_falhas += 1
+
+    except QuotaDiariaExcedidaError as e:
+        print(f"\nERRO DE COTA: {e}")
+        print("A execução foi interrompida graciosamente devido ao esgotamento da cota diária de requisições.")
+        if registros_csv:
+            caminho_csv = salvar_tabela_worked_examples(OUTPUT_DIR, registros_csv)
+            print(f"Metadados dos exemplos salvos até o momento foram salvos em: {_caminho_para_exibicao(caminho_csv)}")
+        return 1
 
     if registros_csv:
         caminho_csv = salvar_tabela_worked_examples(OUTPUT_DIR, registros_csv)

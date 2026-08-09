@@ -1,9 +1,0 @@
-**Enunciado do Problema/Tarefa:**
-
-Considere o seguinte trecho de código Python:
-
-```python
-nome_produto = "Laptop Gamer XYZ"
-quantidade = 2
-preco_unitario = 4999.50
-em_estoque

@@ -1,12 +1,46 @@
 id,verbo_bloom,conceito
-worked_example_variaveis_e_tipos_de_dados_1,Calcular,Variáveis e Tipos de Dados
-worked_example_variaveis_e_tipos_de_dados_2,Desconstruir,Variáveis e Tipos de Dados
-worked_example_variaveis_e_tipos_de_dados_3,Selecionar,Variáveis e Tipos de Dados
-worked_example_estruturas_de_controle_de_fluxo_1,Determinar causas e consequências.,Estruturas de Controle de Fluxo
-worked_example_estruturas_de_controle_de_fluxo_2,Contrastar,Estruturas de Controle de Fluxo
-worked_example_funcoes_3,Julgar,Funções
-worked_example_estruturas_de_dados_listas_tuplas_dicionarios_1,Apresentar conclusão sobre algo,"Estruturas de Dados (Listas, Tuplas, Dicionários)"
-worked_example_estruturas_de_dados_listas_tuplas_dicionarios_2,Dar a ideia principal,"Estruturas de Dados (Listas, Tuplas, Dicionários)"
-worked_example_estruturas_de_dados_listas_tuplas_dicionarios_3,Escolher,"Estruturas de Dados (Listas, Tuplas, Dicionários)"
-worked_example_modulos_e_pacotes_1,Ordenar,Módulos e Pacotes
-worked_example_modulos_e_pacotes_2,Mapear,Módulos e Pacotes
+worked_example_variaveis_1,Expressar pontos de vista,Variáveis
+worked_example_variaveis_2,Dizer,Variáveis
+worked_example_variaveis_3,Construir quadros sinópticos,Variáveis
+worked_example_tipos_de_dados_1,Ilustrar,Tipos de Dados
+worked_example_tipos_de_dados_2,Transcrever,Tipos de Dados
+worked_example_tipos_de_dados_3,Implementar,Tipos de Dados
+worked_example_estruturas_de_controle_1,Distinguir,Estruturas de Controle
+worked_example_estruturas_de_controle_2,Caracterizar,Estruturas de Controle
+worked_example_estruturas_de_controle_3,Propor problemas para resolução,Estruturas de Controle
+worked_example_lacos_de_repeticao_1,Assinalar,Laços de Repetição
+worked_example_lacos_de_repeticao_2,Registrar,Laços de Repetição
+worked_example_lacos_de_repeticao_3,Assinalar,Laços de Repetição
+worked_example_funcoes_1,Levantar hipóteses,Funções
+worked_example_funcoes_2,Propor problemas para resolução,Funções
+worked_example_funcoes_3,Deduzir,Funções
+worked_example_modulos_1,Nomear,Módulos
+worked_example_modulos_2,Associar,Módulos
+worked_example_modulos_3,Gerar,Módulos
+worked_example_tratamento_de_erros_1,Compor,Tratamento de Erros
+worked_example_tratamento_de_erros_2,Separar algo a partir de um determinado critério,Tratamento de Erros
+worked_example_tratamento_de_erros_3,Escolher,Tratamento de Erros
+worked_example_manipulacao_de_arquivos_1,Construir,Manipulação de Arquivos
+worked_example_manipulacao_de_arquivos_2,Construir ou resolver analogias,Manipulação de Arquivos
+worked_example_manipulacao_de_arquivos_3,Explicitar argumentos a favor ou contra,Manipulação de Arquivos
+worked_example_estruturas_de_dados_1,Reproduzir,Estruturas de Dados
+worked_example_estruturas_de_dados_2,Sugerir hipóteses a partir de critérios,Estruturas de Dados
+worked_example_estruturas_de_dados_3,"Redigir (diário, relatório, texto...)",Estruturas de Dados
+worked_example_listas_1,Formular,Listas
+worked_example_listas_2,Repetir,Listas
+worked_example_listas_3,Selecionar,Listas
+worked_example_tuplas_1,Descrever,Tuplas
+worked_example_tuplas_2,Ilustrar,Tuplas
+worked_example_tuplas_3,Aplicar,Tuplas
+worked_example_dicionarios_1,Estabelecer paralelo,Dicionários
+worked_example_dicionarios_2,Solucionar,Dicionários
+worked_example_dicionarios_3,Integrar,Dicionários
+worked_example_programacao_orientada_a_objetos_1,Executar,Programação Orientada a Objetos
+worked_example_programacao_orientada_a_objetos_2,Enumerar,Programação Orientada a Objetos
+worked_example_programacao_orientada_a_objetos_3,Identificar e contrastar características,Programação Orientada a Objetos
+worked_example_bibliotecas_e_frameworks_1,Propor problemas para resolução.,Bibliotecas e Frameworks
+worked_example_bibliotecas_e_frameworks_2,Distinguir,Bibliotecas e Frameworks
+worked_example_bibliotecas_e_frameworks_3,"Ordenar objetos, elementos ou processo.",Bibliotecas e Frameworks
+worked_example_desenvolvimento_de_aplicacoes_1,Reordenar,Desenvolvimento de Aplicações
+worked_example_desenvolvimento_de_aplicacoes_2,Rotular,Desenvolvimento de Aplicações
+worked_example_desenvolvimento_de_aplicacoes_3,Organizar,Desenvolvimento de Aplicações

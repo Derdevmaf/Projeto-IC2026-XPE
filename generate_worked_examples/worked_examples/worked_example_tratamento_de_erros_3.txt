@@ -1,0 +1,5 @@
+Exemplo 3: Escolher o método de tratamento de erro adequado para um determinado caso em Python. Tarefa: decisão sobre qual estratégia de tratamento de erro usar em uma situação específica. 
+ Passo 1: analisar a natureza do erro e as consequências de seu tratamento. 
+ Passo 2: considerar opções de tratamento de erro como try-except, finally, ou lançamento de exceções personalizadas. 
+ Passo 3: escolher o método baseado nas necessidades do programa e nos requisitos de robustez e segurança. 
+ Conclusão: Escolher o método correto de tratamento de erro permite que os desenvolvedores garantam a qualidade e a confiabilidade do software, lidando com erros de forma eficaz e apropriada.

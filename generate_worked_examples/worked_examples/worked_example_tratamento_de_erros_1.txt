@@ -1,0 +1,5 @@
+Exemplo 1: Compor um tratamento de erro personalizado em Python. Tarefa: criar uma função que some dois números e retorne a soma, mas também trate erros caso os números sejam inválidos. 
+ Passo 1: definir a função com try-except para capturar erros de entrada. 
+ Passo 2: verificar se as entradas são números válidos e, caso não sejam, levantar um erro personalizado. 
+ Passo 3: realizar a soma e retornar o resultado. 
+ Conclusão: Ao compor o tratamento de erro, garantimos que a função seja robusta e devolva informações úteis ao usuário em caso de erros.

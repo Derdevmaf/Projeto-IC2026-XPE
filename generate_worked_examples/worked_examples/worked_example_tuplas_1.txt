@@ -1,0 +1,1 @@
+Descrever como criar uma tupla em Python

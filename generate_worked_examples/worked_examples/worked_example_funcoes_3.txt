@@ -1,5 +1,1 @@
-## Exemplo Resolvido: Julgando a Qualidade de uma Função Python para Cálculo de Média
-
-### 1. Enunciado do Problema/Tarefa
-
-Você foi incumbido de integrar um módulo de estatísticas em um novo sistema. Uma das funções propostas para esse módulo
+Enunciado: Dado um trecho de código Python que define uma função para somar dois números, deduzir como essa função pode ser utilizada em outros contextos. Resolução: Passo 1 - Analisar a estrutura da função e entender que ela aceita dois parâmetros numéricos. Passo 2 - Reconhecer que a função realiza uma operação básica de soma. Passo 3 - Deduzir que essa função pode ser utilizada em qualquer situação onde seja necessário somar duas quantidades, como no cálculo de descontos, somas de listas, etc. Conclusão: Ao deduzir o uso potencial dessa função, podemos aplicá-la de maneira mais eficaz em diferentes problemas de programação.

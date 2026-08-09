@@ -1,0 +1,1 @@
+Ilustrar como acessar elementos de uma tupla

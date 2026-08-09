@@ -88,8 +88,9 @@ uma execução real.
 | `--C`       | sim         | —                           | Quantidade de conceitos (K) a gerar                                |
 | `--N`       | sim         | —                           | Quantidade de worked examples por conceito                        |
 | `--tema`    | não         | `Programação em Python`    | Tema/domínio de conteúdo                                          |
-| `--model`   | não         | `gemini-2.5-flash`           | Modelo Gemini usado nas chamadas                                  |
+| `--model`   | não         | `gemini-2.5-flash-lite`      | Modelo Gemini usado nas chamadas                                  |
 | `--seed`    | não         | aleatório                  | Semente para tornar reprodutível o sorteio de verbos               |
+| `--delay`   | não         | `0.0`                      | Intervalo em segundos entre chamadas (ex.: `--delay 6.0` para cota de 10 RPM) |
 | `--dry-run` | não         | desativado                 | Roda sem chamar a IA de verdade (ver seção acima)                 |
 
 ## Estrutura de arquivos gerados

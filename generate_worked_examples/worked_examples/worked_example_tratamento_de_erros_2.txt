@@ -1,0 +1,5 @@
+Exemplo 2: Separar erros de execução e erros de sintaxe em um programa Python. Tarefa: analisar um código com vários erros e separá-los entre erros de execução e erros de sintaxe. 
+ Passo 1: Executar o código e identificar erros de sintaxe que causem a interrupção imediata do programa. 
+ Passo 2: Corrigir os erros de sintaxe e executar novamente para encontrar erros de execução, como divisão por zero ou acesso a indice inválido. 
+ Passo 3: registrar e categorizar os erros encontrados. 
+ Conclusão: Separar erros pelo critério de sua natureza (sintaxe ou execução) ajuda a diagnosticar e corrigir problemas de forma sistemática e eficiente.
