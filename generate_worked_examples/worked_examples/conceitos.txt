@@ -1,0 +1,5 @@
+Variáveis e Tipos de Dados
+Estruturas de Controle de Fluxo
+Funções
+Estruturas de Dados (Listas, Tuplas, Dicionários)
+Módulos e Pacotes

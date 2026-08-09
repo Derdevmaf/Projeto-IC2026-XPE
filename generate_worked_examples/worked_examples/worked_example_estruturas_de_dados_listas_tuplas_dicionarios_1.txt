@@ -1,19 +1,26 @@
-## Worked Example: Análise de Vendas com Estruturas de Dados em Python
+**Worked Example: Análise de Desempenho de Turma com Estruturas de Dados em Python**
 
-### 1. Enunciado do Problema/Tarefa a ser Resolvida
+**1. Enunciado do Problema/Tarefa:**
 
-Uma loja de eletrônicos registrou suas vendas mensais de diversos produtos em um sistema que gera uma lista de registros, onde cada registro é um dicionário contendo o nome do produto, o mês da venda e o valor total de vendas para aquele produto no mês. O gerente da loja precisa de uma visão consolidada para entender quais produtos tiveram o melhor desempenho.
+Você é um professor e possui um registro de notas de seus alunos em diferentes disciplinas. Sua tarefa é processar esses dados utilizando estruturas de dados em Python (listas, tuplas, dicionários) para:
+a) Calcular a média individual de cada aluno.
+b) Calcular a média de cada disciplina para toda a turma.
+c) Identificar a disciplina com a maior média geral da turma.
 
-**Tarefa:** Dada a lista de registros de vendas, **elabore uma tabela** que apresente o total de vendas acumuladas para cada produto único, em todos os meses registrados.
+Após realizar essas análises, **apresente uma conclusão sobre o desempenho geral da turma**, destacando as principais observações e explicando qual estrutura de dados foi mais adequada para representar e manipular cada parte da informação, justificando suas escolhas.
 
-**Dados de Entrada:**
-```python
-dados_vendas = [
-    {'produto': 'Teclado Mecânico', 'mes': 'Janeiro', 'vendas': 150},
-    {'produto': 'Mouse Gamer', 'mes': 'Janeiro', 'vendas': 120},
-    {'produto': 'Monitor Ultrawide', 'mes': 'Janeiro', 'vendas': 300},
-    {'produto': 'Teclado Mecânico', 'mes': 'Fevereiro', 'vendas': 170},
-    {'produto': 'Mouse Gamer', 'mes': 'Fevereiro', 'vendas': 130},
-    {'produto': 'Monitor Ultrawide', 'mes': 'Fevereiro', 'vendas': 320},
-    {'produto': 'Webcam HD', 'mes': 'Fevereiro', 'vendas': 80},
-    {'produto': 'Teclado Mecânico', 'mes': 'Março', 'vendas': 1
+**2. Resolução Comentada, Passo a Passo:**
+
+Vamos representar os dados da turma. Consideraremos uma lista de dicionários, onde cada dicionário representa um aluno e suas notas em diferentes disciplinas.
+
+*   **Passo 1: Representando os Dados Iniciais.**
+    Vamos iniciar com um conjunto de dados para a nossa turma. Usaremos uma `lista` para armazenar múltiplos alunos e, para cada aluno, um `dicionário` será ideal para associar um nome (chave) às suas notas, que por sua vez podem ser armazenadas em outro `dicionário` aninhado (disciplina: nota) ou até mesmo uma `tupla` se as notas de um aluno em um conjunto fixo de disciplinas fossem sempre na mesma ordem. Optaremos por um dicionário aninhado para as notas, pois oferece maior clareza e flexibilidade para adicionar ou remover disciplinas.
+
+    ```python
+    # Dados da turma: uma lista de dicionários, onde cada dicionário é um aluno.
+    # As notas de cada aluno são um dicionário aninhado (disciplina: nota).
+    turma = [
+        {"nome": "Ana", "notas": {"Matemática": 85, "História": 90, "Ciências": 78}},
+        {"nome": "Bruno", "notas": {"Matemática": 70, "História": 65, "Ciências": 88}},
+        {"nome": "Carla", "notas": {"Matemática": 92, "História": 88, "Ciências": 95}},
+        {"nome": "Daniel", "notas": {"Matemática": 60, "História": 75, "Ciências": 70}}

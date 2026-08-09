@@ -1,0 +1,6 @@
+**
+**Worked Example: Módulos e Pacotes em Python - Mapeando a Estrutura e Dependências**
+
+**1. Enunciado do Problema/Tarefa:**
+
+Considere o seguinte projeto Python simplificado, que organiza funcionalidades relacionadas a operações financeiras em módulos

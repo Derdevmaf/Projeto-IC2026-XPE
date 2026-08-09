@@ -1,3 +1,18 @@
-Um professor de programação deseja registrar algumas informações sobre seus alunos usando variáveis em Python. Sua tarefa é **associar** cada informação listada abaixo a um nome de variável descritivo e, mais importante, ao tipo de dado Python mais adequado para representá-la.
+**Exemplo Resolvido: Variáveis e Tipos de Dados em Python - Selecionar Dados Numéricos**
 
-Informações a serem associ
+**1. Enunciado do Problema:**
+
+Você está desenvolvendo um sistema de gerenciamento de usuários e recebeu um conjunto inicial de variáveis que armazenam diferentes informações sobre um perfil. Sua tarefa é **selecionar** e listar apenas as variáveis que armazenam valores estritamente numéricos (inteiros ou de ponto flutuante) e que seriam apropriadas para realizar operações matemáticas diretas (como soma, subtração, multiplicação).
+
+As variáveis fornecidas são:
+*   `nome_usuario = "Maria Silva"`
+*   `idade_usuario = 28`
+*   `saldo_conta = 1500.50`
+*   `usuario_ativo = True`
+*   `codigo_produto = "AB123"`
+*   `quantidade_pedidos = 7`
+*   `avaliacao_media = 4.7`
+
+**2. Resolução Comentada, Passo a Passo:**
+
+Para "selecionar" as variáveis corretamente, precisamos analisar cada uma delas individualmente, identificando seu tipo de

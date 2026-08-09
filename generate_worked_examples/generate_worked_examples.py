@@ -32,6 +32,7 @@ Requisitos:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import os
 import random
@@ -540,6 +541,42 @@ def salvar_worked_example(diretorio: Path, conceito_slug: str, indice: int, cont
     return caminho
 
 
+def salvar_conceitos(diretorio: Path, conceitos: list[str]) -> tuple[Path, Path]:
+    """
+    Salva a lista de K conceitos gerados pela IA em dois formatos:
+      - conceitos.json: lista de strings em formato JSON
+      - conceitos.txt: um conceito por linha em texto simples
+    """
+    caminho_json = diretorio / "conceitos.json"
+    caminho_txt = diretorio / "conceitos.txt"
+
+    caminho_json.write_text(
+        json.dumps(conceitos, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    caminho_txt.write_text(
+        "\n".join(conceitos) + "\n", encoding="utf-8"
+    )
+    return caminho_json, caminho_txt
+
+
+def salvar_tabela_worked_examples(diretorio: Path, registros: list[dict[str, str]]) -> Path:
+    """
+    Salva a tabela worked_examples.csv contendo os metadados de cada exemplo gerado:
+      - id: identificador unico do exemplo (ex.: worked_example_busca_vetorial_1)
+      - verbo_bloom: verbo da Taxonomia de Bloom utilizado
+      - conceito: conceito trabalhado no exemplo
+    """
+    caminho_csv = diretorio / "worked_examples.csv"
+    cabeçalhos = ["id", "verbo_bloom", "conceito"]
+
+    with caminho_csv.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=cabeçalhos)
+        writer.writeheader()
+        writer.writerows(registros)
+
+    return caminho_csv
+
+
 # ---------------------------------------------------------------------------
 # Orquestracao principal
 # ---------------------------------------------------------------------------
@@ -597,6 +634,12 @@ def main(argv: list[str] | None = None) -> int:
     # -- Etapas 2-4: para cada conceito, gerar N worked examples ------------
     criar_diretorio_saida(OUTPUT_DIR)
 
+    caminho_json, caminho_txt = salvar_conceitos(OUTPUT_DIR, conceitos)
+    print(f"\nLista de conceitos salva em:")
+    print(f"  - {_caminho_para_exibicao(caminho_json)}")
+    print(f"  - {_caminho_para_exibicao(caminho_txt)}")
+
+    registros_csv: list[dict[str, str]] = []
     total_gerado = 0
     total_falhas = 0
 
@@ -614,11 +657,21 @@ def main(argv: list[str] | None = None) -> int:
                     client, args.model, args.tema, conceito, verbo, contexto_bloom, dry_run=args.dry_run
                 )
                 caminho = salvar_worked_example(OUTPUT_DIR, slug, indice, conteudo)
+                exemplo_id = f"worked_example_{slug}_{indice}"
+                registros_csv.append({
+                    "id": exemplo_id,
+                    "verbo_bloom": verbo.verbo,
+                    "conceito": conceito,
+                })
                 print(f"OK -> {_caminho_para_exibicao(caminho)}")
                 total_gerado += 1
             except RuntimeError as e:
                 print(f"FALHOU ({e})")
                 total_falhas += 1
+
+    if registros_csv:
+        caminho_csv = salvar_tabela_worked_examples(OUTPUT_DIR, registros_csv)
+        print(f"\nTabela de metadados salva em: {_caminho_para_exibicao(caminho_csv)}")
 
     # -- resumo final ---------------------------------------------------------
     print("\n" + "=" * 60)

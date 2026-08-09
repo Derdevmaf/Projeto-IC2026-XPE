@@ -1,71 +1,20 @@
-**Worked Example: Utilizando Variáveis e Tipos de Dados**
+**Exemplo Resolvido: Calculando a Área de um Retângulo com Variáveis e Tipos de Dados em Python**
 
 **1. Enunciado do Problema/Tarefa:**
 
-Você precisa criar um programa em Python que armazene e exiba as informações básicas de um aluno. As informações a serem armazenadas são: o nome completo do aluno, sua idade, sua altura em metros e se ele é um estudante ativo (sim ou não). **Utilize** variáveis para armazenar cada uma dessas informações e garanta que o tipo de dado correto seja empregado para cada uma delas. Ao final, imprima todas as informações formatadas para o usuário.
-
----
+Escreva um programa em Python que calcule a área de um retângulo. O programa deve definir valores para o comprimento e a largura do retângulo, armazenando-os em variáveis apropriadas. Em seguida, deve "calcular" a área utilizando esses valores e exibir o resultado final.
 
 **2. Resolução Comentada, Passo a Passo:**
 
-Para resolver este problema, precisaremos definir quatro variáveis, cada uma para uma informação específica, e atribuir a elas os valores correspondentes, escolhendo o tipo de dado mais adequado para cada situação.
+Para resolver este problema, vamos seguir três passos principais: definir as dimensões, realizar o cálculo e exibir o resultado.
 
-*   **Passo 1: Definir a variável para o nome do aluno.**
-    O nome de uma pessoa é uma sequência de caracteres. Em Python, usamos o tipo de dado `str` (string) para isso.
-    ```python
-    nome_aluno = "Maria Eduarda Silva"
-    # 'nome_aluno' é o nome da nossa variável.
-    # O sinal de igual (=) é o operador de atribuição, ele coloca o valor à direita na variável à esquerda.
-    # "Maria Eduarda Silva" é o valor, e as aspas duplas indicam que é uma string.
-    ```
-
-*   **Passo 2: Definir a variável para a idade do aluno.**
-    A idade é um número inteiro, ou seja, não possui casas decimais. Para isso, o tipo de dado `int` (inteiro) é o mais apropriado.
-    ```python
-    idade_aluno = 19
-    # 'idade_aluno' armazenará o valor numérico 19, que é um inteiro.
-    ```
-
-*   **Passo 3: Definir a variável para a altura do aluno.**
-    A altura geralmente é medida com valores decimais (por exemplo, 1.65 metros). Para números com casas decimais, utilizamos o tipo de dado `float` (ponto flutuante).
-    ```python
-    altura_aluno = 1.68
-    # 'altura_aluno' armazena o valor 1.68. O ponto (.) é usado como separador decimal em Python.
-    ```
-
-*   **Passo 4: Definir a variável para o status de estudante ativo.**
-    A informação "é estudante ativo?" é uma pergunta de sim ou não, verdadeiro ou falso. Para esse tipo de dado booleano, Python oferece o tipo `bool`, que pode ser `True` ou `False`.
-    ```python
-    is_estudante_ativo = True
-    # 'is_estudante_ativo' armazena o valor booleano True, indicando que a aluna é estudante ativa.
-    # Note que True e False em Python começam com letra maiúscula.
-    ```
-
-*   **Passo 5: Imprimir as informações armazenadas.**
-    Para exibir os valores das variáveis, utilizaremos a função `print()` do Python. Podemos usar f-strings (strings formatadas) para combinar texto e o valor das variáveis de forma legível.
-    ```python
-    print(f"Informações do Aluno:")
-    print(f"Nome: {nome_aluno}")
-    print(f"Idade: {idade_aluno} anos")
-    print(f"Altura: {altura_aluno:.2f} m") # O :.2f formata o float para 2 casas decimais
-    print(f"É estudante ativo? {is_estudante_ativo}")
-    ```
-
-**Código Completo:**
 ```python
-# Passo 1: Definir a variável para o nome do aluno (tipo str)
-nome_aluno = "Maria Eduarda Silva"
-
-# Passo 2: Definir a variável para a idade do aluno (tipo int)
-idade_aluno = 19
-
-# Passo 3: Definir a variável para a altura do aluno (tipo float)
-altura_aluno = 1.68
-
-# Passo 4: Definir a variável para o status de estudante ativo (tipo bool)
-is_estudante_ativo = True
-
-# Passo 5: Imprimir as informações armazenadas, utilizando as variáveis
-print(f"--- Informações do Aluno ---")
-print(f"Nome completo: {nome_aluno}")
-print(f"Idade: {idade_aluno} anos
+# --- Passo 1: Definir as dimensões do retângulo usando variáveis ---
+# Neste passo, criamos variáveis para armazenar o comprimento e a largura do nosso retângulo.
+#
+# Conceito: Variáveis são nomes que atribuímos a locais de memória para guardar dados.
+# Podemos pensar nelas como "caixas" rotuladas onde guardamos informações.
+#
+# Conceito: Tipos de Dados definem a natureza dos dados que uma variável pode armazenar.
+# Para as dimensões de um retângulo, que podem ter casas decimais, o tipo de dado mais adequado
+# é o '

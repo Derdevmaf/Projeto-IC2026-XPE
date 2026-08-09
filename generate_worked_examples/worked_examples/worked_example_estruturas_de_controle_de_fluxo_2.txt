@@ -1,0 +1,4 @@
+**Enunciado do Problema:**
+
+A empresa "ClimaInfo" registrou as temperaturas diárias em Celsius de uma semana e precisa processá-las. Para cada dia, o programa deve:
+1.  Converter a temperatura de Celsius para Fahrenheit (F = C * 9

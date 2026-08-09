@@ -1,5 +1,0 @@
-### **Worked Example: Estimar Situação Final de Alunos**
-
-#### 1. Enunciado do Problema/Tarefa:
-
-Você foi solicitado a desenvolver um programa em Python que ajude professores a **estimar** a situação final de um grupo de alunos, considerando suas notas

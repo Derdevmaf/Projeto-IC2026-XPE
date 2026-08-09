@@ -1,33 +1,25 @@
-**Enunciado do Problema:**
+**Enunciado:**
 
-Elabore um mapa conceitual que represente as principais características e distinções entre as estruturas de dados fundamentais em Python: Listas, Tuplas e Dicionários. O mapa deve abordar aspectos como mutabilidade, ordenação, forma de indexação/acesso e suas respectivas sintaxes, além de mencionar brevemente seus casos de uso típicos. O objetivo é analisar criticamente as propriedades de cada estrutura e suas relações.
+Em programação Python, existem diferentes maneiras de organizar e armazenar dados em coleções. Explique a ideia principal das estruturas de dados Listas, Tuplas e Dicionários, destacando suas características fundamentais e os cenários típicos em que cada uma seria mais apropriada. O objetivo é dar a ideia central do propósito e funcionamento de cada uma.
 
----
+**Resolução Comentada:**
 
-**Resolução Comentada, Passo a Passo:**
+Vamos abordar a ideia principal de cada estrutura, passo a passo:
 
-Para elaborar um mapa conceitual eficaz, precisamos desmembrar cada estrutura de dados e identificar suas propriedades essenciais, bem como suas semelhanças e diferenças.
+1.  **Ideia Principal Geral:** Em Python, Listas, Tuplas e Dicionários são as ferramentas básicas para agrupar e gerenciar múltiplos valores. A escolha entre elas depende de fatores como a necessidade de ordem, a possibilidade de alteração dos dados após a criação (mutabilidade) e a forma como os dados serão acessados.
 
-1.  **Identificação dos Conceitos Centrais:**
-    Começamos com os três conceitos principais que estarão no centro do nosso mapa ou como ramos primários:
-    *   Lista
-    *   Tupla
-    *   Dicionário
+2.  **Listas (Lists):**
+    *   **Ideia Principal:** Uma lista é uma coleção *ordenada* e *mutável* de itens. Pense nela como uma caixa flexível e extensível onde você pode guardar uma sequência de coisas (números, textos, outros objetos, e até outras listas!), em uma ordem específica. Você pode reorganizar os itens, adicionar novos, remover existentes e modificar qualquer item após a lista ter sido criada.
+    *   **Características Fundamentais:**
+        *   **Ordenada:** Os itens possuem uma posição (índice), começando do zero. A ordem de inserção é mantida.
+        *   **Mutável:** Pode-se adicionar, remover ou modificar itens.
+        *   **Heterogênea:** Pode conter itens de diferentes tipos de dados.
+    *   **Cenário Típico:** Ideal para armazenar coleções de itens que podem mudar com o tempo, como uma lista de compras, uma fila de tarefas, ou resultados de uma pesquisa onde novos dados podem ser adicionados.
 
-2.  **Análise das Propriedades Individuais (Desconstruindo cada estrutura):**
-
-    *   **Lista:**
-        *   **Tipo de Coleção:** Coleção de itens.
-        *   **Mutabilidade:** *Mutável*. Isso significa que seus elementos podem ser adicionados, removidos ou modificados após a criação da lista.
-        *   **Ordenação:** *Ordenada*. Os itens mantêm a ordem em que foram inseridos.
-        *   **Indexação/Acesso:** Acessada por *índices numéricos* (começando do 0). Permite fatiamento (slicing).
-        *   **Sintaxe:** Delimitada por *colchetes* `[]`. Ex: `[1, "a", True]`.
-        *   **Conteúdo:** Permite itens duplicados. Pode conter itens de diferentes tipos.
-        *   **Caso de Uso Típico:** Quando a ordem é importante e os dados precisam ser frequentemente alterados, como uma fila de espera ou uma coleção de resultados em tempo real.
-
-    *   **Tupla:**
-        *   **Tipo de Coleção:** Coleção de itens.
-        *   **Mutabilidade:** *Imutável*. Uma vez criada, seus elementos não podem ser alterados, adicionados ou removidos.
-        *   **Ordenação:** *Ordenada*. Assim como as listas, os itens mantêm a ordem de inserção.
-        *   **Indexação/Acesso:** Acessada por *índices numéricos* (começando do 0). Permite fatiamento (slicing).
-        *   **Sintaxe:** Delimitada por *parênteses* `()`. Ex: `(1
+3.  **Tuplas (Tuples):**
+    *   **Ideia Principal:** Uma tupla é uma coleção *ordenada* e *imutável* de itens. Ao contrário das listas, uma vez que uma tupla é criada, seu conteúdo (o número de itens e os próprios itens) não pode ser alterado. Imagine-a como um registro fixo de informações.
+    *   **Características Fundamentais:**
+        *   **Ordenada:** Assim como as listas, os itens têm uma posição e a ordem de inserção é mantida.
+        *   **Imutável:** Não é possível adicionar, remover ou modificar itens após a criação.
+        *   **Heterogênea:** Pode conter itens de diferentes tipos de dados.
+    *   **Cenário Típ

@@ -1,0 +1,5 @@
+## Exemplo Resolvido: Julgando a Qualidade de uma Função Python para Cálculo de Média
+
+### 1. Enunciado do Problema/Tarefa
+
+Você foi incumbido de integrar um módulo de estatísticas em um novo sistema. Uma das funções propostas para esse módulo

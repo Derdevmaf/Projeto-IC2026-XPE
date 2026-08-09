@@ -1,0 +1,3 @@
+**Enunciado do Problema:**
+
+Você está desenvolvendo um pequeno sistema de gerenciamento de tarefas em Python. Atualmente, possui três trechos de código espalhados em diferentes arquivos, mas eles não estão organizados de forma lógica. Sua tarefa é **ordenar** esses trechos

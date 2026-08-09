@@ -1,9 +1,0 @@
-Aqui está um exemplo resolvido que utiliza o verbo "Listar informações importantes e eliminar informações irrelevantes." dentro do contexto de Estruturas de Controle de Fluxo em Python.
-
----
-
-### Exemplo Resolvido: Processamento de Pedidos com Descontos e Frete
-
-**1. Enunciado do Problema/Tarefa:**
-
-Um cliente realizou um pedido online para uma loja de eletrônicos. O pedido contém vários itens, cada um com seu nome, preço unitário e quantidade. A loja oferece um desconto de 10% se o valor total dos itens (antes do frete) exceder R$ 500,00. Clientes Platinum, identificados por um código especial, têm direito a um desconto adicional de 5

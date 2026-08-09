@@ -34,10 +34,7 @@ import generate_worked_examples as gwe  # noqa: E402
 
 
 def _fake_status_error(status_code: int, message: str = "erro simulado"):
-    e = MagicMock(spec=errors.APIError)
-    e.code = status_code
-    e.message = message
-    return e
+    return errors.APIError(status_code, {"error": {"message": message}})
 
 
 def _fake_text_response(text: str) -> MagicMock:
@@ -174,6 +171,52 @@ class TestSalvarWorkedExample(unittest.TestCase):
         self.assertEqual(caminho.read_text(encoding="utf-8").strip(), "conteudo de teste")
 
 
+class TestSalvarConceitos(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_salvar_conceitos_json_e_txt(self):
+        conceitos = ["Variáveis", "Estruturas de Repetição"]
+        c_json, c_txt = gwe.salvar_conceitos(self.tmpdir, conceitos)
+
+        self.assertTrue(c_json.exists())
+        self.assertTrue(c_txt.exists())
+
+        import json
+        dados_json = json.loads(c_json.read_text(encoding="utf-8"))
+        self.assertEqual(dados_json, conceitos)
+
+        linhas_txt = c_txt.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(linhas_txt, conceitos)
+
+
+class TestSalvarTabelaWorkedExamples(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_salvar_tabela_csv(self):
+        registros = [
+            {"id": "worked_example_variaveis_1", "verbo_bloom": "Listar", "conceito": "Variáveis"},
+            {"id": "worked_example_listas_1", "verbo_bloom": "Criar", "conceito": "Listas"},
+        ]
+        caminho_csv = gwe.salvar_tabela_worked_examples(self.tmpdir, registros)
+        self.assertTrue(caminho_csv.exists())
+
+        import csv
+        with caminho_csv.open("r", encoding="utf-8") as f:
+            reader = list(csv.DictReader(f))
+            self.assertEqual(len(reader), 2)
+            self.assertEqual(reader[0]["id"], "worked_example_variaveis_1")
+            self.assertEqual(reader[0]["verbo_bloom"], "Listar")
+            self.assertEqual(reader[0]["conceito"], "Variáveis")
+
+
 # ---------------------------------------------------------------------------
 # chamar_ia (tratamento de falhas de comunicacao)
 # ---------------------------------------------------------------------------
@@ -297,10 +340,14 @@ class TestMainDryRun(unittest.TestCase):
     def test_gera_arquivos_esperados(self):
         codigo = gwe.main(["--C", "2", "--N", "3", "--dry-run", "--seed", "42"])
         self.assertEqual(codigo, 0)
-        arquivos = sorted(p.name for p in gwe.OUTPUT_DIR.glob("*.txt"))
+        arquivos = sorted(p.name for p in gwe.OUTPUT_DIR.glob("worked_example_*.txt"))
         self.assertEqual(len(arquivos), 6)  # 2 conceitos x 3 exemplos
         for nome in arquivos:
             self.assertTrue(nome.startswith("worked_example_conceito_de_exemplo_"))
+
+        self.assertTrue((gwe.OUTPUT_DIR / "conceitos.json").exists())
+        self.assertTrue((gwe.OUTPUT_DIR / "conceitos.txt").exists())
+        self.assertTrue((gwe.OUTPUT_DIR / "worked_examples.csv").exists())
 
     def test_C_ou_N_invalidos_sao_rejeitados(self):
         with self.assertRaises(SystemExit):
@@ -332,10 +379,14 @@ class TestMainComIaMockada(unittest.TestCase):
         codigo = gwe.main(["--C", "2", "--N", "2", "--seed", "1"])
 
         self.assertEqual(codigo, 0)
-        arquivos = sorted(p.name for p in gwe.OUTPUT_DIR.glob("*.txt"))
+        arquivos = sorted(p.name for p in gwe.OUTPUT_DIR.glob("worked_example_*.txt"))
         self.assertEqual(len(arquivos), 4)
         self.assertTrue(any("variaveis" in n for n in arquivos))
         self.assertTrue(any("listas" in n for n in arquivos))
+
+        self.assertTrue((gwe.OUTPUT_DIR / "conceitos.json").exists())
+        self.assertTrue((gwe.OUTPUT_DIR / "conceitos.txt").exists())
+        self.assertTrue((gwe.OUTPUT_DIR / "worked_examples.csv").exists())
 
     def test_sem_api_key_encerra_com_erro(self):
         with patch.dict("os.environ", {}, clear=True):

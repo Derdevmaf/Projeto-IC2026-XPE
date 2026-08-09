@@ -96,7 +96,10 @@ uma execução real.
 
 ```text
 worked_examples/
-├── worked_example_<conceito>_1.txt
+├── conceitos.json                   # Lista dos K conceitos gerados (JSON)
+├── conceitos.txt                    # Lista dos K conceitos gerados (1 por linha)
+├── worked_examples.csv              # Tabela com id do exemplo, verbo bloom e conceito usado
+├── worked_example_<conceito>_1.txt   # Conteúdo do worked example gerado
 ├── worked_example_<conceito>_2.txt
 └── ...
 ```
@@ -105,6 +108,11 @@ worked_examples/
 acentos normalizados, espaços viram `_`, caracteres especiais são
 removidos). A pasta `worked_examples/` é criada automaticamente se não
 existir.
+
+A tabela `worked_examples.csv` possui os seguintes cabeçalhos:
+- `id`: Identificador único do exemplo (ex.: `worked_example_busca_vetorial_1`).
+- `verbo_bloom`: Verbo da Taxonomia de Bloom sorteado para o exemplo.
+- `conceito`: Nome do conceito trabalhado.
 
 ## Sobre o `bloom_verbs.txt`
 
