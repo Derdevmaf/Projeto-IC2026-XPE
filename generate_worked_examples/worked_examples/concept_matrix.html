@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matriz de Co-ocorr&#234;ncia de Conceitos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #6366f1;
+      --accent2: #a78bfa;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem; }
+    .header { text-align: center; margin-bottom: 3rem; }
+    .header h1 { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; }
+    .header p { color: var(--text-muted); font-size: 0.95rem; max-width: 600px; margin: 0 auto; }
+    .legend { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .legend-label { font-size: 0.8rem; color: var(--text-muted); }
+    .legend-gradient { width: 180px; height: 14px; border-radius: 7px; background: linear-gradient(to right, #151821, #1e3a5f, #2563eb, #7c3aed, #f59e0b); border: 1px solid var(--border); }
+    .matrix-container { overflow-x: auto; border-radius: 16px; border: 1px solid var(--border); background: var(--surface); padding: 1.5rem; margin-bottom: 3rem; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    table { border-collapse: collapse; width: max-content; min-width: 100%; }
+    th, td { padding: 0; text-align: center; }
+    .corner { padding: 0.5rem; color: var(--text-muted); font-size: 0.7rem; text-align: right; vertical-align: bottom; min-width: 160px; }
+    .col-header { vertical-align: bottom; padding-bottom: 0.5rem; }
+    .col-header-inner { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; font-size: 0.72rem; font-weight: 500; color: var(--text-muted); padding: 0.5rem 0.4rem; transition: color 0.2s; }
+    .col-header-inner.highlighted { color: var(--accent2); }
+    .row-header { text-align: right; padding-right: 0.75rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); white-space: nowrap; min-width: 160px; transition: color 0.2s; }
+    .row-header.highlighted { color: var(--accent2); }
+    .cell { width: 44px; height: 44px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s, filter 0.15s; border: 1px solid transparent; }
+    .cell:hover { transform: scale(1.15); z-index: 10; box-shadow: 0 4px 20px rgba(0,0,0,0.5); filter: brightness(1.3); border-color: rgba(255,255,255,0.3); }
+    .cell.diagonal { opacity: 0.4; }
+    .tooltip { display: none; position: fixed; background: #1e2235; border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.8rem; z-index: 1000; pointer-events: none; max-width: 280px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .tooltip strong { color: var(--accent2); }
+    .tooltip .count { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+    .section-title { font-size: 1.2rem; font-weight: 600; color: var(--text); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; }
+    .section-title::before { content: ''; display: inline-block; width: 4px; height: 1.2em; background: linear-gradient(to bottom, var(--accent), var(--accent2)); border-radius: 2px; }
+    .dep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.75rem; margin-bottom: 3rem; }
+    .dep-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1.1rem; display: flex; align-items: center; gap: 0.75rem; transition: border-color 0.2s, transform 0.15s; }
+    .dep-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .dep-arrow { font-size: 1.2rem; color: var(--accent); }
+    .dep-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+    .dep-text strong { color: var(--text); }
+    .dep-count { font-size: 0.75rem; background: var(--surface2); border-radius: 999px; padding: 0.1em 0.5em; margin-left: 0.25rem; color: var(--accent2); }
+    .stats-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.5rem; flex: 1; min-width: 140px; text-align: center; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+    footer { text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>&#129504; Matriz de Co-ocorr&#234;ncia de Conceitos</h1>
+    <p>Cada c&#233;lula mostra quantas vezes o conceito da coluna &#233; mencionado nos exerc&#237;cios do conceito da linha. Passe o mouse para ver detalhes.</p>
+  </div>
+  <div id="stats-bar" class="stats-bar"></div>
+  <div class="legend">
+    <span class="legend-label">Poucas men&#231;&#245;es</span>
+    <div class="legend-gradient"></div>
+    <span class="legend-label">Muitas men&#231;&#245;es</span>
+  </div>
+  <div class="matrix-container"><table id="matrix-table"></table></div>
+  <div class="section-title">&#128204; Depend&#234;ncias Inferidas (pr&#233;-requisitos)</div>
+  <div class="dep-grid">
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Funções</strong> antes de <strong>Módulos</strong> <span class="dep-count">(28 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Desenvolvimento de Aplicações</strong> <span class="dep-count">(16 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Estruturas de Dados</strong> <span class="dep-count">(15 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Manipulação de Arquivos</strong> antes de <strong>Módulos</strong> <span class="dep-count">(13 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Listas</strong> <span class="dep-count">(13 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Funções</strong> <span class="dep-count">(12 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Dicionários</strong> <span class="dep-count">(12 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Módulos</strong> antes de <strong>Bibliotecas e Frameworks</strong> <span class="dep-count">(12 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Estruturas de Controle</strong> <span class="dep-count">(11 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Dicionários</strong> antes de <strong>Laços de Repetição</strong> <span class="dep-count">(11 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(10 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Laços de Repetição</strong> <span class="dep-count">(9 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(9 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Laços de Repetição</strong> <span class="dep-count">(8 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Bibliotecas e Frameworks</strong> antes de <strong>Funções</strong> <span class="dep-count">(8 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Módulos</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(8 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Dicionários</strong> <span class="dep-count">(8 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Variáveis</strong> antes de <strong>Desenvolvimento de Aplicações</strong> <span class="dep-count">(8 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Tipos de Dados</strong> <span class="dep-count">(7 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Funções</strong> antes de <strong>Tipos de Dados</strong> <span class="dep-count">(7 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Dicionários</strong> antes de <strong>Estruturas de Dados</strong> <span class="dep-count">(7 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Tipos de Dados</strong> <span class="dep-count">(6 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Estruturas de Controle</strong> <span class="dep-count">(6 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Laços de Repetição</strong> <span class="dep-count">(6 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Módulos</strong> <span class="dep-count">(6 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Tratamento de Erros</strong> <span class="dep-count">(6 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Funções</strong> antes de <strong>Tratamento de Erros</strong> <span class="dep-count">(6 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Funções</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(6 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Funções</strong> antes de <strong>Desenvolvimento de Aplicações</strong> <span class="dep-count">(6 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Dados</strong> antes de <strong>Desenvolvimento de Aplicações</strong> <span class="dep-count">(6 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Variáveis</strong> <span class="dep-count">(5 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Dicionários</strong> antes de <strong>Variáveis</strong> <span class="dep-count">(5 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Módulos</strong> antes de <strong>Estruturas de Dados</strong> <span class="dep-count">(5 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Listas</strong> <span class="dep-count">(5 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Programação Orientada a Objetos</strong> antes de <strong>Listas</strong> <span class="dep-count">(5 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Programação Orientada a Objetos</strong> <span class="dep-count">(5 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Desenvolvimento de Aplicações</strong> <span class="dep-count">(5 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Funções</strong> <span class="dep-count">(4 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Módulos</strong> <span class="dep-count">(4 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Dicionários</strong> <span class="dep-count">(4 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Programação Orientada a Objetos</strong> <span class="dep-count">(4 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Bibliotecas e Frameworks</strong> <span class="dep-count">(4 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Variáveis</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Módulos</strong> antes de <strong>Funções</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Tratamento de Erros</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Tratamento de Erros</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Bibliotecas e Frameworks</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Estruturas de Dados</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Estruturas de Dados</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Desenvolvimento de Aplicações</strong> antes de <strong>Estruturas de Dados</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Funções</strong> antes de <strong>Dicionários</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Programação Orientada a Objetos</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Bibliotecas e Frameworks</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Bibliotecas e Frameworks</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Funções</strong> antes de <strong>Bibliotecas e Frameworks</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Desenvolvimento de Aplicações</strong> antes de <strong>Bibliotecas e Frameworks</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Desenvolvimento de Aplicações</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Dicionários</strong> antes de <strong>Desenvolvimento de Aplicações</strong> <span class="dep-count">(3 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Variáveis</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tratamento de Erros</strong> antes de <strong>Tipos de Dados</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Funções</strong> antes de <strong>Estruturas de Controle</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Estruturas de Controle</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Variáveis</strong> antes de <strong>Laços de Repetição</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Funções</strong> antes de <strong>Laços de Repetição</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Desenvolvimento de Aplicações</strong> antes de <strong>Laços de Repetição</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Módulos</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tratamento de Erros</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Dados</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Desenvolvimento de Aplicações</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Estruturas de Dados</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Manipulação de Arquivos</strong> antes de <strong>Estruturas de Dados</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Bibliotecas e Frameworks</strong> antes de <strong>Estruturas de Dados</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Listas</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Funções</strong> antes de <strong>Listas</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Dicionários</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tratamento de Erros</strong> antes de <strong>Dicionários</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Dados</strong> antes de <strong>Dicionários</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Programação Orientada a Objetos</strong> antes de <strong>Bibliotecas e Frameworks</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Módulos</strong> antes de <strong>Desenvolvimento de Aplicações</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Bibliotecas e Frameworks</strong> antes de <strong>Desenvolvimento de Aplicações</strong> <span class="dep-count">(2 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Módulos</strong> antes de <strong>Variáveis</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Variáveis</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Manipulação de Arquivos</strong> antes de <strong>Tipos de Dados</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Módulos</strong> antes de <strong>Estruturas de Controle</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Módulos</strong> antes de <strong>Laços de Repetição</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Tipos de Dados</strong> antes de <strong>Funções</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Laços de Repetição</strong> antes de <strong>Módulos</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Desenvolvimento de Aplicações</strong> antes de <strong>Tratamento de Erros</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Dicionários</strong> antes de <strong>Manipulação de Arquivos</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Programação Orientada a Objetos</strong> antes de <strong>Estruturas de Dados</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Dicionários</strong> antes de <strong>Listas</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Desenvolvimento de Aplicações</strong> antes de <strong>Listas</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Programação Orientada a Objetos</strong> antes de <strong>Dicionários</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Desenvolvimento de Aplicações</strong> antes de <strong>Dicionários</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Listas</strong> antes de <strong>Programação Orientada a Objetos</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Desenvolvimento de Aplicações</strong> antes de <strong>Programação Orientada a Objetos</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Manipulação de Arquivos</strong> antes de <strong>Bibliotecas e Frameworks</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+<div class="dep-card"><span class="dep-arrow">&#8594;</span><span class="dep-text">Ensinar <strong>Estruturas de Controle</strong> antes de <strong>Desenvolvimento de Aplicações</strong> <span class="dep-count">(1 men&#231;&#245;es)</span></span></div>
+  </div>
+  <footer>Gerado automaticamente por analyze_concept_matrix.py &bull; Projeto IC 2026 XPE</footer>
+  <div class="tooltip" id="tooltip"></div>
+  <script>
+    const concepts = ["Variáveis", "Tipos de Dados", "Estruturas de Controle", "Laços de Repetição", "Funções", "Módulos", "Tratamento de Erros", "Manipulação de Arquivos", "Estruturas de Dados", "Listas", "Tuplas", "Dicionários", "Programação Orientada a Objetos", "Bibliotecas e Frameworks", "Desenvolvimento de Aplicações"];
+    const matrix = [[40, 2, 5, 3, 0, 1, 0, 0, 0, 1, 0, 5, 0, 0, 0], [0, 51, 7, 0, 7, 0, 2, 1, 0, 6, 0, 0, 0, 0, 0], [0, 6, 33, 11, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0], [2, 8, 9, 36, 2, 1, 0, 0, 0, 6, 0, 11, 0, 0, 2], [0, 1, 4, 0, 31, 3, 0, 0, 0, 12, 0, 0, 0, 8, 0], [0, 2, 6, 1, 28, 54, 0, 13, 0, 4, 0, 0, 0, 0, 0], [0, 6, 3, 3, 6, 0, 46, 0, 0, 0, 0, 0, 0, 0, 1], [0, 2, 1, 9, 6, 8, 2, 27, 2, 10, 0, 1, 0, 3, 2], [0, 2, 3, 3, 0, 5, 0, 2, 26, 15, 0, 7, 1, 2, 3], [0, 5, 2, 13, 2, 0, 0, 0, 0, 49, 0, 1, 5, 0, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0], [0, 4, 2, 8, 3, 0, 2, 0, 2, 12, 0, 73, 1, 0, 1], [0, 3, 5, 4, 0, 0, 0, 0, 0, 1, 0, 0, 62, 0, 1], [0, 3, 3, 4, 3, 12, 0, 1, 0, 0, 0, 0, 2, 27, 3], [8, 5, 1, 3, 6, 2, 0, 0, 6, 16, 0, 3, 0, 2, 1]];
+    const maxVal = 73;
+
+    let totalMentions = 0, strongDeps = 0;
+    concepts.forEach((r, i) => {
+      concepts.forEach((c, j) => {
+        if (i !== j) { totalMentions += matrix[i][j]; if (matrix[i][j] >= 2) strongDeps++; }
+      });
+    });
+
+    const statsBar = document.getElementById('stats-bar');
+    [
+      [concepts.length, 'Conceitos'],
+      [totalMentions, 'Men\u00e7\u00f5es totais'],
+      [strongDeps, 'Depend\u00eancias fortes (\u22652)'],
+      [Math.round(totalMentions / (concepts.length * (concepts.length - 1) || 1) * 10) / 10, 'M\u00e9dia men\u00e7\u00f5es/par']
+    ].forEach(([val, label]) => {
+      statsBar.innerHTML += `<div class="stat-card"><div class="stat-value">${val}</div><div class="stat-label">${label}</div></div>`;
+    });
+
+    function heatColor(val, isdiag) {
+      if (isdiag) return 'rgba(100,100,120,0.2)';
+      if (val === 0) return '#151821';
+      const t = Math.min(val / maxVal, 1);
+      const colors = [[30,58,95],[37,99,235],[124,58,237],[245,158,11]];
+      const seg = Math.floor(t * 3);
+      const local = (t * 3) - seg;
+      const c0 = colors[Math.min(seg, 2)];
+      const c1 = colors[Math.min(seg + 1, 3)];
+      const r = Math.round(c0[0] + (c1[0]-c0[0]) * local);
+      const g = Math.round(c0[1] + (c1[1]-c0[1]) * local);
+      const b = Math.round(c0[2] + (c1[2]-c0[2]) * local);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function textColor(val, isdiag) {
+      if (isdiag || val === 0) return '#3d4460';
+      return Math.min(val / maxVal, 1) > 0.4 ? '#fff' : '#c8d4e8';
+    }
+
+    const table = document.getElementById('matrix-table');
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = '<th class="corner">linha &rarr; conceito<br>coluna &rarr; mencionado</th>';
+    concepts.forEach((c, j) => {
+      headerRow.innerHTML += `<th class="col-header" id="col-${j}"><div class="col-header-inner">${c}</div></th>`;
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    concepts.forEach((rowC, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="row-header" id="row-${i}">${rowC}</td>`;
+      concepts.forEach((colC, j) => {
+        const val = matrix[i][j];
+        const isdiag = (i === j);
+        const td = document.createElement('td');
+        td.className = 'cell' + (isdiag ? ' diagonal' : '');
+        td.style.background = heatColor(val, isdiag);
+        td.style.color = textColor(val, isdiag);
+        td.textContent = (val === 0 && !isdiag) ? '\u00b7' : val;
+        td.dataset.row = i; td.dataset.col = j; td.dataset.val = val;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    const tooltip = document.getElementById('tooltip');
+    document.querySelectorAll('.cell').forEach(cell => {
+      cell.addEventListener('mouseenter', (e) => {
+        const i = +cell.dataset.row, j = +cell.dataset.col, val = +cell.dataset.val;
+        document.querySelectorAll('.row-header').forEach(el => el.classList.remove('highlighted'));
+        document.querySelectorAll('.col-header-inner').forEach(el => el.classList.remove('highlighted'));
+        document.getElementById('row-' + i)?.classList.add('highlighted');
+        document.querySelector('#col-' + j + ' .col-header-inner')?.classList.add('highlighted');
+        const dep = (i !== j && val > 0) ? `<br><em style="color:#a78bfa">&ldquo;${concepts[j]}&rdquo; pode ser pr&eacute;-requisito de &ldquo;${concepts[i]}&rdquo;</em>` : '';
+        tooltip.innerHTML = `<div><strong>Exerc&iacute;cios de:</strong> ${concepts[i]}</div><div><strong>Menciona:</strong> ${concepts[j]}</div><div class="count" style="margin-top:4px">${val} men&ccedil;&atilde;o(&#245;es)</div>${dep}`;
+        tooltip.style.display = 'block';
+      });
+      cell.addEventListener('mousemove', (e) => {
+        const x = e.clientX + 14, y = e.clientY - 10;
+        tooltip.style.left = (x + 280 > window.innerWidth ? e.clientX - 290 : x) + 'px';
+        tooltip.style.top = (y + 140 > window.innerHeight ? e.clientY - 150 : y) + 'px';
+      });
+      cell.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+        document.querySelectorAll('.row-header').forEach(el => el.classList.remove('highlighted'));
+        document.querySelectorAll('.col-header-inner').forEach(el => el.classList.remove('highlighted'));
+      });
+    });
+  </script>
+</body>
+</html>
