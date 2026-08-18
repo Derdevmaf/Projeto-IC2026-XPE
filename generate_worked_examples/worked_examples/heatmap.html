@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa de Calor — Matriz de Co-ocorrência de Conceitos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080b12;
+      --surface: #0e1320;
+      --surface2: #151c2e;
+      --border: #1f2a45;
+      --accent: #4f8ef7;
+      --accent2: #a78bfa;
+      --text: #e8eef8;
+      --text-muted: #6b7a9e;
+      --text-dim: #3a4560;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2.5rem 2rem 4rem;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .page-header h1 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #4f8ef7 0%, #a78bfa 50%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .page-header p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      max-width: 640px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.9rem 1.5rem;
+      text-align: center;
+      min-width: 130px;
+    }
+    .stat-value {
+      font-size: 1.9rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    .legend-label { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+    .legend-gradient {
+      width: 220px;
+      height: 16px;
+      border-radius: 8px;
+      background: linear-gradient(to right, #0d2744, #0e4d8c, #1b7fe8, #7c3aed, #d946ef, #f59e0b, #ef4444);
+      border: 1px solid var(--border);
+    }
+
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .toggle-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .toggle-btn:hover, .toggle-btn.active {
+      background: var(--surface2);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .matrix-wrapper {
+      overflow-x: auto;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1.5rem 1.5rem 1.5rem 0;
+      box-shadow: 0 16px 64px rgba(0,0,0,0.6);
+      margin-bottom: 3rem;
+    }
+
+    table { border-collapse: separate; border-spacing: 3px; width: max-content; }
+
+    .corner {
+      width: 175px; min-width: 175px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.65rem; color: var(--text-dim);
+      text-align: right; vertical-align: bottom; line-height: 1.5;
+    }
+
+    .col-header { vertical-align: bottom; padding-bottom: 0.4rem; width: 52px; }
+    .col-header-inner {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      white-space: nowrap;
+      font-size: 0.7rem; font-weight: 500;
+      color: var(--text-muted);
+      padding: 0.4rem 0.3rem;
+      transition: color 0.18s;
+      cursor: default;
+    }
+    .col-header-inner.hl { color: #e2e8f0; font-weight: 700; }
+
+    .row-label {
+      text-align: right; padding-right: 0.85rem;
+      font-size: 0.72rem; font-weight: 500;
+      color: var(--text-muted); white-space: nowrap;
+      min-width: 175px; cursor: default;
+      transition: color 0.18s; vertical-align: middle;
+    }
+    .row-label.hl { color: #e2e8f0; font-weight: 700; }
+
+    .cell {
+      width: 52px; height: 52px;
+      border-radius: 8px;
+      font-size: 0.78rem; font-weight: 700;
+      text-align: center; vertical-align: middle;
+      cursor: pointer;
+      transition: transform 0.14s, filter 0.14s, box-shadow 0.14s;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .cell:hover {
+      transform: scale(1.22); z-index: 20;
+      filter: brightness(1.35) saturate(1.2);
+      box-shadow: 0 6px 28px rgba(0,0,0,0.7);
+      border-color: rgba(255,255,255,0.25);
+    }
+    .cell.diagonal {
+      background: rgba(255,255,255,0.04) !important;
+      color: var(--text-dim) !important;
+      cursor: default;
+    }
+    .cell.diagonal:hover { transform: none; filter: none; box-shadow: none; }
+    .cell.zero-cell { background: #0a0e18 !important; color: var(--text-dim) !important; }
+
+    #tooltip {
+      display: none; position: fixed;
+      background: #13182e; border: 1px solid #2e3a5a;
+      border-radius: 12px; padding: 0.9rem 1.1rem;
+      font-size: 0.82rem; z-index: 9999;
+      pointer-events: none; max-width: 300px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+      line-height: 1.5;
+    }
+    #tooltip .t-row { color: var(--text-muted); font-size: 0.73rem; }
+    #tooltip .t-row strong { color: var(--text); }
+    #tooltip .t-count { font-size: 1.6rem; font-weight: 800; color: #fff; display: block; margin: 0.4rem 0 0.2rem; }
+    #tooltip .t-hint { color: var(--accent2); font-size: 0.73rem; font-style: italic; }
+    #tooltip .t-zero { color: var(--text-dim); font-size: 0.73rem; }
+
+    .section-title {
+      font-size: 1.1rem; font-weight: 700; color: var(--text);
+      margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.6rem;
+    }
+    .section-title::before {
+      content: ''; display: inline-block; width: 4px; height: 1.1em;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2));
+      border-radius: 2px;
+    }
+
+    .dep-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 0.65rem; margin-bottom: 3rem;
+    }
+    .dep-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.8rem 1rem;
+      display: flex; align-items: flex-start; gap: 0.7rem;
+      transition: border-color 0.18s, transform 0.14s;
+    }
+    .dep-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .dep-badge {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff; border-radius: 999px;
+      font-size: 0.7rem; font-weight: 700;
+      padding: 0.15em 0.55em; white-space: nowrap;
+      flex-shrink: 0; margin-top: 0.15rem;
+    }
+    .dep-text { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+    .dep-text strong { color: var(--text); }
+
+    footer {
+      text-align: center; color: var(--text-dim);
+      font-size: 0.72rem; margin-top: 2rem;
+      padding-top: 1.25rem; border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-header">
+    <h1>&#129504; Mapa de Calor &#8212; Co-ocorr&#234;ncia de Conceitos</h1>
+    <p>
+      Cada c&#233;lula mostra <strong>quantas vezes o conceito da coluna &#233; mencionado</strong> nos exerc&#237;cios do conceito da linha.
+      C&#233;lulas mais quentes (laranja/vermelho) indicam forte rela&#231;&#227;o &#8212; poss&#237;vel pr&#233;-requisito.
+    </p>
+  </div>
+
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <div class="legend-row">
+    <span class="legend-label">0 men&#231;&#245;es</span>
+    <div class="legend-gradient"></div>
+    <span class="legend-label">Muitas men&#231;&#245;es</span>
+  </div>
+
+  <div class="controls">
+    <button class="toggle-btn active" id="btn-numbers" onclick="toggleNumbers()">&#128290; Mostrar n&#250;meros</button>
+    <button class="toggle-btn" id="btn-normalize" onclick="toggleNorm()">&#128202; Normalizar por linha</button>
+    <button class="toggle-btn" id="btn-sort" onclick="toggleSort()">&#8597; Ordenar por densidade</button>
+  </div>
+
+  <div class="matrix-wrapper">
+    <table id="matrix-table"></table>
+  </div>
+
+  <div class="section-title">&#128204; Pr&#233;-requisitos inferidos (men&#231;&#245;es &#8805; 2)</div>
+  <div class="dep-grid" id="dep-grid"></div>
+
+  <footer>Gerado por <code>analyze_concept_matrix.py</code> &bull; Projeto IC 2026 XPE</footer>
+
+  <div id="tooltip"></div>
+
+  <script>
+    const conceptsOrig = [
+      "Vari\u00e1veis","Tipos de Dados","Estruturas de Controle","La\u00e7os de Repeti\u00e7\u00e3o",
+      "Fun\u00e7\u00f5es","M\u00f3dulos","Tratamento de Erros","Manipula\u00e7\u00e3o de Arquivos",
+      "Estruturas de Dados","Listas","Tuplas","Dicion\u00e1rios",
+      "Programa\u00e7\u00e3o Orientada a Objetos","Bibliotecas e Frameworks","Desenvolvimento de Aplica\u00e7\u00f5es"
+    ];
+
+    const matrixOrig = [
+      [40, 2,  5,  3,  0,  1,  0,  0,  0,  1,  0,  5,  0,  0,  0],
+      [ 0,51,  7,  0,  7,  0,  2,  1,  0,  6,  0,  0,  0,  0,  0],
+      [ 0, 6, 33, 11,  2,  1,  0,  0,  0,  2,  0,  0,  0,  0,  0],
+      [ 2, 8,  9, 36,  2,  1,  0,  0,  0,  6,  0, 11,  0,  0,  2],
+      [ 0, 1,  4,  0, 31,  3,  0,  0,  0, 12,  0,  0,  0,  8,  0],
+      [ 0, 2,  6,  1, 28, 54,  0, 13,  0,  4,  0,  0,  0,  0,  0],
+      [ 0, 6,  3,  3,  6,  0, 46,  0,  0,  0,  0,  0,  0,  0,  1],
+      [ 0, 2,  1,  9,  6,  8,  2, 27,  2, 10,  0,  1,  0,  3,  2],
+      [ 0, 2,  3,  3,  0,  5,  0,  2, 26, 15,  0,  7,  1,  2,  3],
+      [ 0, 5,  2, 13,  2,  0,  0,  0,  0, 49,  0,  1,  5,  0,  1],
+      [ 0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  5,  0,  0,  0,  0],
+      [ 0, 4,  2,  8,  3,  0,  2,  0,  2, 12,  0, 73,  1,  0,  1],
+      [ 0, 3,  5,  4,  0,  0,  0,  0,  0,  1,  0,  0, 62,  0,  1],
+      [ 0, 3,  3,  4,  3, 12,  0,  1,  0,  0,  0,  0,  2, 27,  3],
+      [ 8, 5,  1,  3,  6,  2,  0,  0,  6, 16,  0,  3,  0,  2,  1]
+    ];
+
+    let showNumbers = true;
+    let normalizeByRow = false;
+    let sortByDensity = false;
+    const concepts = conceptsOrig;
+    const matrix = matrixOrig;
+
+    const palette = [
+      [8,11,18],[13,39,68],[14,77,140],[27,127,232],
+      [124,58,237],[217,70,239],[245,158,11],[239,68,68]
+    ];
+
+    function lerp(a,b,t){ return Math.round(a+(b-a)*t); }
+    function heatColor(norm){
+      if(norm<=0) return '#0a0e18';
+      const t=Math.min(norm,1);
+      const seg=t*(palette.length-1);
+      const lo=Math.floor(seg), hi=Math.min(lo+1,palette.length-1);
+      const local=seg-lo, c0=palette[lo], c1=palette[hi];
+      return `rgb(${lerp(c0[0],c1[0],local)},${lerp(c0[1],c1[1],local)},${lerp(c0[2],c1[2],local)})`;
+    }
+    function textColor(norm){
+      if(norm<=0) return '#2a3350';
+      return norm>0.35?'#ffffff':'#c8d4e8';
+    }
+
+    function effectiveMatrix(){
+      const n=concepts.length;
+      if(normalizeByRow){
+        return matrix.map((row,ri)=>{
+          const offDiag=row.filter((_,ci)=>ci!==ri);
+          const rowMax=Math.max(...offDiag,1);
+          return row.map((v,ci)=>ci===ri?null:v/rowMax);
+        });
+      } else {
+        const allOff=[];
+        for(let i=0;i<n;i++) for(let j=0;j<n;j++) if(i!==j) allOff.push(matrix[i][j]);
+        const gMax=Math.max(...allOff,1);
+        return matrix.map((row,ri)=>row.map((v,ci)=>ci===ri?null:v/gMax));
+      }
+    }
+
+    function buildOrder(){
+      if(!sortByDensity) return concepts.map((_,i)=>i);
+      const sums=concepts.map((_,i)=>matrix[i].reduce((s,v,j)=>j!==i?s+v:s,0));
+      return concepts.map((_,i)=>i).sort((a,b)=>sums[b]-sums[a]);
+    }
+
+    function render(){
+      const n=concepts.length;
+      const normMat=effectiveMatrix();
+      const order=buildOrder();
+      const table=document.getElementById('matrix-table');
+      table.innerHTML='';
+
+      const thead=document.createElement('thead');
+      const htr=document.createElement('tr');
+      const corner=document.createElement('th');
+      corner.className='corner';
+      corner.innerHTML='linha &rarr; exerc&iacute;cios de<br>coluna &rarr; conceito mencionado';
+      htr.appendChild(corner);
+      order.forEach(ci=>{
+        const th=document.createElement('th');
+        th.className='col-header'; th.id=`ch-${ci}`;
+        th.innerHTML=`<div class="col-header-inner" id="chi-${ci}">${concepts[ci]}</div>`;
+        htr.appendChild(th);
+      });
+      thead.appendChild(htr);
+      table.appendChild(thead);
+
+      const tbody=document.createElement('tbody');
+      order.forEach(ri=>{
+        const tr=document.createElement('tr');
+        const rl=document.createElement('td');
+        rl.className='row-label'; rl.id=`rl-${ri}`;
+        rl.textContent=concepts[ri];
+        tr.appendChild(rl);
+        order.forEach(ci=>{
+          const val=matrix[ri][ci];
+          const norm=normMat[ri][ci];
+          const isDiag=ri===ci;
+          const td=document.createElement('td');
+          td.className='cell'+(isDiag?' diagonal':'')+(val===0&&!isDiag?' zero-cell':'');
+          td.dataset.ri=ri; td.dataset.ci=ci; td.dataset.val=val;
+          if(!isDiag){ td.style.background=heatColor(norm); td.style.color=textColor(norm); }
+          if(showNumbers){
+            if(isDiag) td.textContent='\u2014';
+            else if(val===0) td.textContent='\u00b7';
+            else td.textContent=val;
+          }
+          td.addEventListener('mouseenter',e=>onCellEnter(e,ri,ci,val,norm,isDiag));
+          td.addEventListener('mousemove', e=>moveTooltip(e));
+          td.addEventListener('mouseleave',()=>onCellLeave());
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      renderDeps();
+    }
+
+    const tooltip=document.getElementById('tooltip');
+    function onCellEnter(e,ri,ci,val,norm,isDiag){
+      document.querySelectorAll('.row-label').forEach(el=>el.classList.remove('hl'));
+      document.querySelectorAll('.col-header-inner').forEach(el=>el.classList.remove('hl'));
+      if(!isDiag){
+        document.getElementById(`rl-${ri}`)?.classList.add('hl');
+        document.getElementById(`chi-${ci}`)?.classList.add('hl');
+      }
+      if(isDiag){
+        tooltip.innerHTML=`<div class="t-row">Conceito: <strong>${concepts[ri]}</strong></div><div class="t-count">${val}</div><div class="t-zero">men\u00e7\u00f5es internas (diagonal)</div>`;
+      } else if(val===0){
+        tooltip.innerHTML=`<div class="t-row">Exerc\u00edcios de: <strong>${concepts[ri]}</strong></div><div class="t-row">Menciona: <strong>${concepts[ci]}</strong></div><div class="t-count" style="color:#3a4560">0</div><div class="t-zero">Nenhuma men\u00e7\u00e3o detectada</div>`;
+      } else {
+        const pct=Math.round(norm*100);
+        tooltip.innerHTML=`<div class="t-row">Exerc\u00edcios de: <strong>${concepts[ri]}</strong></div><div class="t-row">Menciona: <strong>${concepts[ci]}</strong></div><div class="t-count">${val}</div><div class="t-row">${pct}% do m\u00e1ximo da ${normalizeByRow?'linha':'matriz'}</div>${val>=2?`<div class="t-hint">&#128161; "${concepts[ci]}" pode ser pr\u00e9-requisito de "${concepts[ri]}"</div>`:''}`;
+      }
+      tooltip.style.display='block';
+      moveTooltip(e);
+    }
+    function moveTooltip(e){
+      const x=e.clientX+16, y=e.clientY-12;
+      tooltip.style.left=(x+300>window.innerWidth?e.clientX-310:x)+'px';
+      tooltip.style.top=(y+150>window.innerHeight?e.clientY-160:y)+'px';
+    }
+    function onCellLeave(){
+      tooltip.style.display='none';
+      document.querySelectorAll('.row-label').forEach(el=>el.classList.remove('hl'));
+      document.querySelectorAll('.col-header-inner').forEach(el=>el.classList.remove('hl'));
+    }
+
+    function renderDeps(){
+      const grid=document.getElementById('dep-grid');
+      grid.innerHTML='';
+      const n=concepts.length, deps=[];
+      for(let ri=0;ri<n;ri++) for(let ci=0;ci<n;ci++)
+        if(ri!==ci&&matrix[ri][ci]>=2) deps.push({row:ri,col:ci,val:matrix[ri][ci]});
+      deps.sort((a,b)=>b.val-a.val);
+      deps.forEach(d=>{
+        const card=document.createElement('div');
+        card.className='dep-card';
+        card.innerHTML=`<span class="dep-badge">${d.val}&times;</span><span class="dep-text">Ensinar <strong>${concepts[d.col]}</strong> antes de <strong>${concepts[d.row]}</strong></span>`;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderStats(){
+      const n=concepts.length;
+      let total=0, strong=0, maxVal=0;
+      for(let i=0;i<n;i++) for(let j=0;j<n;j++) if(i!==j){
+        total+=matrixOrig[i][j];
+        if(matrixOrig[i][j]>=2) strong++;
+        if(matrixOrig[i][j]>maxVal) maxVal=matrixOrig[i][j];
+      }
+      const avg=(total/(n*(n-1))).toFixed(1);
+      const bar=document.getElementById('stats-bar');
+      [[n,'Conceitos'],[total,'Men\u00e7\u00f5es totais'],[strong,'Rela\u00e7\u00f5es fortes (\u22652)'],[avg,'M\u00e9dia men\u00e7\u00f5es/par'],[maxVal,'Pico m\u00e1ximo']].forEach(([val,label])=>{
+        bar.innerHTML+=`<div class="stat-card"><div class="stat-value">${val}</div><div class="stat-label">${label}</div></div>`;
+      });
+    }
+
+    function toggleNumbers(){ showNumbers=!showNumbers; document.getElementById('btn-numbers').classList.toggle('active',showNumbers); render(); }
+    function toggleNorm(){ normalizeByRow=!normalizeByRow; document.getElementById('btn-normalize').classList.toggle('active',normalizeByRow); render(); }
+    function toggleSort(){ sortByDensity=!sortByDensity; document.getElementById('btn-sort').classList.toggle('active',sortByDensity); render(); }
+
+    renderStats();
+    render();
+  </script>
+</body>
+</html>
