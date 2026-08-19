@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Worked Examples por Conceito</title>
+  <meta name="description" content="Explore worked examples filtrados por conceitos de programação Python." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg-base:#0a0e1a;--bg-surface:#111827;--bg-card:#1a2235;--bg-card-hover:#1f2a42;
+      --border:rgba(99,179,237,0.12);--border-hover:rgba(99,179,237,0.35);
+      --accent:#3b82f6;--accent-soft:#60a5fa;--accent-glow:rgba(59,130,246,0.18);
+      --teal:#14b8a6;--teal-soft:#2dd4bf;--rose:#f43f5e;
+      --text-primary:#f0f6ff;--text-secondary:#94a3b8;--text-muted:#475569;
+      --radius-sm:8px;--radius-md:14px;--radius-lg:20px;
+      --shadow-card:0 4px 24px rgba(0,0,0,0.4);--shadow-glow:0 0 30px rgba(59,130,246,0.25);
+      --transition:0.25s cubic-bezier(0.4,0,0.2,1)
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-base);color:var(--text-primary);min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(59,130,246,0.08) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 90%,rgba(168,85,247,0.08) 0%,transparent 60%);pointer-events:none;z-index:0}
+    .page-wrapper{position:relative;z-index:1}
+    header{padding:22px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;background:rgba(10,14,26,0.85);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+    .hicon{width:42px;height:42px;background:linear-gradient(135deg,var(--accent),var(--teal));border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 0 20px rgba(59,130,246,0.4);flex-shrink:0}
+    .htxt h1{font-size:1.25rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,#f0f6ff 30%,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .htxt p{font-size:.75rem;color:var(--text-secondary);margin-top:1px}
+    .hbadge{margin-left:auto;background:rgba(59,130,246,0.18);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;padding:4px 11px;border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.05em}
+    main{display:grid;grid-template-columns:290px 1fr;min-height:calc(100vh - 85px)}
+    aside{border-right:1px solid var(--border);padding:22px 18px;background:rgba(17,24,39,0.5);position:sticky;top:85px;height:calc(100vh - 85px);overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+    aside::-webkit-scrollbar{width:3px}
+    aside::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .stitle{font-size:.65rem;font-weight:700;letter-spacing:.12em;color:var(--text-muted);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border)}
+    .sw{position:relative}
+    #concept-search{width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 9px 8px 30px;color:var(--text-primary);font-family:inherit;font-size:.82rem;outline:none;transition:var(--transition)}
+    #concept-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    #concept-search::placeholder{color:var(--text-muted)}
+    .si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:13px;pointer-events:none}
+    .clist{display:flex;flex-direction:column;gap:4px}
+    .cpill{display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);cursor:pointer;transition:var(--transition);user-select:none}
+    .cpill:hover{border-color:var(--border-hover);transform:translateX(2px);background:var(--bg-card-hover)}
+    .cpill.active{border-color:var(--accent);background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(59,130,246,0.04));box-shadow:0 0 0 1px var(--accent)}
+    .cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+    .cname{font-size:.8rem;font-weight:500;color:var(--text-secondary);flex:1;transition:var(--transition)}
+    .cpill.active .cname{color:var(--text-primary)}
+    .ccnt{font-size:.68rem;font-weight:600;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,0.06);color:var(--text-muted);transition:var(--transition)}
+    .cpill.active .ccnt{background:var(--accent);color:#fff}
+    .sact{display:flex;gap:6px}
+    .btn{flex:1;padding:7px 9px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);font-family:inherit;font-size:.76rem;font-weight:500;cursor:pointer;transition:var(--transition);text-align:center}
+    .btn:hover{background:var(--bg-card-hover);border-color:var(--border-hover);color:var(--text-primary)}
+    .btn.bp{background:var(--accent);border-color:transparent;color:#fff}
+    .btn.bp:hover{background:var(--accent-soft);box-shadow:var(--shadow-glow)}
+    .srow{display:flex;flex-direction:column;gap:6px}
+    .schip{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;border-radius:var(--radius-sm);background:var(--bg-card);border:1px solid var(--border)}
+    .scl{font-size:.73rem;color:var(--text-secondary)}
+    .scv{font-size:.95rem;font-weight:700;color:var(--text-primary)}
+    .content{padding:26px 32px;overflow-y:auto}
+    .ch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+    .ctitle{font-size:1.4rem;font-weight:800;letter-spacing:-.03em}
+    .ctitle span{background:linear-gradient(135deg,#60a5fa,#2dd4bf);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .atags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+    .atag{display:flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:.73rem;font-weight:600;cursor:pointer;transition:var(--transition);border:1px solid}
+    .atag:hover{opacity:.7}
+    .vtgl{display:flex;gap:3px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px}
+    .vbtn{padding:5px 9px;border-radius:5px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:13px;transition:var(--transition)}
+    .vbtn.active{background:var(--accent);color:#fff}
+    .fbar{display:flex;align-items:center;gap:9px;margin-bottom:20px;flex-wrap:wrap}
+    .fl{font-size:.76rem;color:var(--text-muted)}
+    select.fs{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 26px 6px 9px;color:var(--text-primary);font-family:inherit;font-size:.78rem;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center;transition:var(--transition)}
+    select.fs:focus{border-color:var(--accent)}
+    .rc{margin-left:auto;font-size:.76rem;color:var(--text-muted);background:var(--bg-card);padding:5px 10px;border-radius:999px;border:1px solid var(--border)}
+    .rc strong{color:#60a5fa}
+    .es{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 20px;gap:12px;color:var(--text-muted);text-align:center}
+    .es-icon{font-size:48px;opacity:.3}
+    .es h3{font-size:.95rem;color:var(--text-secondary)}
+    .es p{font-size:.8rem;max-width:320px;line-height:1.6}
+    #cc{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+    #cc.lv{grid-template-columns:1fr}
+    @keyframes cIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .wec{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;transition:var(--transition);cursor:default;position:relative;overflow:hidden;animation:cIn .3s cubic-bezier(0.4,0,0.2,1) both}
+    .wec:hover{border-color:var(--border-hover);background:var(--bg-card-hover);transform:translateY(-3px);box-shadow:var(--shadow-card)}
+    .cardh{display:flex;align-items:flex-start;gap:9px;margin-bottom:11px}
+    .cnum{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;flex-shrink:0}
+    .cmeta{flex:1;min-width:0}
+    .cid{font-size:.64rem;font-weight:600;letter-spacing:.07em;color:var(--text-muted);font-family:'Courier New',monospace;margin-bottom:3px}
+    .cbadge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:.67rem;font-weight:600;border:1px solid}
+    .cverb{display:flex;align-items:center;gap:5px;margin-bottom:10px;padding:5px 8px;background:rgba(255,255,255,0.03);border-radius:var(--radius-sm);border:1px solid var(--border)}
+    .cvl{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-weight:600}
+    .cvv{font-size:.76rem;color:var(--text-secondary);font-style:italic}
+    .ccont{font-size:.78rem;line-height:1.65;color:var(--text-secondary);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+    .wec.exp .ccont{display:block;-webkit-line-clamp:unset}
+    .cfoot{display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:10px;border-top:1px solid var(--border)}
+    .exbtn{font-size:.7rem;color:#60a5fa;background:none;border:none;cursor:pointer;font-family:inherit;font-weight:500;transition:var(--transition);padding:0}
+    .exbtn:hover{color:#2dd4bf}
+    .bdots{display:flex;align-items:center;gap:2px}
+    .bd{width:4px;height:4px;border-radius:50%;background:var(--text-muted)}
+    .mo{position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(8px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s ease}
+    .mo.open{opacity:1;pointer-events:all}
+    .md{background:var(--bg-surface);border:1px solid var(--border-hover);border-radius:var(--radius-lg);padding:30px;max-width:640px;width:100%;max-height:80vh;overflow-y:auto;transform:scale(.95) translateY(20px);transition:transform .25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 24px 80px rgba(0,0,0,0.6);position:relative}
+    .mo.open .md{transform:scale(1) translateY(0)}
+    .md::-webkit-scrollbar{width:3px}
+    .md::-webkit-scrollbar-thumb{background:var(--border-hover);border-radius:2px}
+    .mclose{position:absolute;top:12px;right:12px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary);width:28px;height:28px;border-radius:var(--radius-sm);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
+    .mclose:hover{background:var(--rose);border-color:var(--rose);color:#fff}
+    .mtit{font-size:1.15rem;font-weight:700;margin-bottom:6px;letter-spacing:-.02em}
+    .msub{font-size:.77rem;color:var(--text-muted);margin-bottom:18px}
+    .mbody{font-size:.85rem;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap}
+    @media(max-width:900px){main{grid-template-columns:1fr}aside{position:static;height:auto;border-right:none;border-bottom:1px solid var(--border)}}
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <header>
+    <div class="hicon">&#127891;</div>
+    <div class="htxt">
+      <h1>Worked Examples Explorer</h1>
+      <p>Filtre e explore exemplos resolvidos por conceito de programação Python</p>
+    </div>
+    <div class="hbadge">IC 2026 · XPE</div>
+  </header>
+  <main>
+    <aside>
+      <div class="stitle">&#128269; Buscar conceito</div>
+      <div class="sw">
+        <span class="si">&#128270;</span>
+        <input type="text" id="concept-search" placeholder="Filtrar conceitos..." autocomplete="off" />
+      </div>
+      <div class="stitle">&#128218; Conceitos</div>
+      <div class="clist" id="concept-list"></div>
+      <div class="stitle">&#9889; Ações</div>
+      <div class="sact">
+        <button class="btn bp" id="select-all-btn">Selecionar Todos</button>
+        <button class="btn" id="clear-btn">Limpar</button>
+      </div>
+      <div class="stitle">&#128202; Resumo</div>
+      <div class="srow" id="stats-row"></div>
+    </aside>
+    <div class="content">
+      <div class="ch">
+        <div>
+          <div class="ctitle">Exemplos <span id="title-hl">Selecionados</span></div>
+          <div class="atags" id="active-tags"></div>
+        </div>
+        <div class="vtgl">
+          <button class="vbtn active" id="gvb" title="Grade" onclick="setView('grid')">&#8862;</button>
+          <button class="vbtn" id="lvb" title="Lista" onclick="setView('list')">&#9776;</button>
+        </div>
+      </div>
+      <div class="fbar">
+        <span class="fl">Ordenar por:</span>
+        <select class="fs" id="sort-select">
+          <option value="concept">Conceito</option>
+          <option value="id">ID</option>
+          <option value="verb">Verbo Bloom</option>
+        </select>
+        <span class="fl">Nível Bloom:</span>
+        <select class="fs" id="bloom-filter">
+          <option value="all">Todos os níveis</option>
+          <option value="lembrar">Lembrar</option>
+          <option value="compreender">Compreender</option>
+          <option value="aplicar">Aplicar</option>
+          <option value="analisar">Analisar</option>
+          <option value="avaliar">Avaliar</option>
+          <option value="criar">Criar</option>
+        </select>
+        <span class="rc" id="results-count"><strong>0</strong> exemplos</span>
+      </div>
+      <div id="cc"></div>
+      <div class="es" id="empty-state">
+        <div class="es-icon">&#128300;</div>
+        <h3>Nenhum exemplo selecionado</h3>
+        <p>Selecione um ou mais conceitos no painel lateral para visualizar os worked examples correspondentes.</p>
+      </div>
+    </div>
+  </main>
+  <div class="mo" id="modal-overlay" onclick="closeModal(event)">
+    <div class="md">
+      <button class="mclose" onclick="closeModal()">&#215;</button>
+      <div class="mtit" id="modal-title"></div>
+      <div class="msub" id="modal-subtitle"></div>
+      <div class="mbody" id="modal-body"></div>
+    </div>
+  </div>
+</div>
+<script>
+const CONCEPTS=["Vari\u00e1veis","Tipos de Dados","Estruturas de Controle","La\u00e7os de Repeti\u00e7\u00e3o","Fun\u00e7\u00f5es","M\u00f3dulos","Tratamento de Erros","Manipula\u00e7\u00e3o de Arquivos","Estruturas de Dados","Listas","Tuplas","Dicion\u00e1rios","Programa\u00e7\u00e3o Orientada a Objetos","Bibliotecas e Frameworks","Desenvolvimento de Aplica\u00e7\u00f5es"];
+const CC={"Vari\u00e1veis":{bg:"rgba(59,130,246,0.12)",border:"rgba(59,130,246,0.5)",dot:"#3b82f6",text:"#60a5fa"},"Tipos de Dados":{bg:"rgba(168,85,247,0.12)",border:"rgba(168,85,247,0.5)",dot:"#a855f7",text:"#c084fc"},"Estruturas de Controle":{bg:"rgba(20,184,166,0.12)",border:"rgba(20,184,166,0.5)",dot:"#14b8a6",text:"#2dd4bf"},"La\u00e7os de Repeti\u00e7\u00e3o":{bg:"rgba(245,158,11,0.12)",border:"rgba(245,158,11,0.5)",dot:"#f59e0b",text:"#fbbf24"},"Fun\u00e7\u00f5es":{bg:"rgba(244,63,94,0.12)",border:"rgba(244,63,94,0.5)",dot:"#f43f5e",text:"#fb7185"},"M\u00f3dulos":{bg:"rgba(34,197,94,0.12)",border:"rgba(34,197,94,0.5)",dot:"#22c55e",text:"#4ade80"},"Tratamento de Erros":{bg:"rgba(239,68,68,0.12)",border:"rgba(239,68,68,0.5)",dot:"#ef4444",text:"#f87171"},"Manipula\u00e7\u00e3o de Arquivos":{bg:"rgba(234,179,8,0.12)",border:"rgba(234,179,8,0.5)",dot:"#eab308",text:"#facc15"},"Estruturas de Dados":{bg:"rgba(99,102,241,0.12)",border:"rgba(99,102,241,0.5)",dot:"#6366f1",text:"#818cf8"},"Listas":{bg:"rgba(14,165,233,0.12)",border:"rgba(14,165,233,0.5)",dot:"#0ea5e9",text:"#38bdf8"},"Tuplas":{bg:"rgba(236,72,153,0.12)",border:"rgba(236,72,153,0.5)",dot:"#ec4899",text:"#f472b6"},"Dicion\u00e1rios":{bg:"rgba(16,185,129,0.12)",border:"rgba(16,185,129,0.5)",dot:"#10b981",text:"#34d399"},"Programa\u00e7\u00e3o Orientada a Objetos":{bg:"rgba(139,92,246,0.12)",border:"rgba(139,92,246,0.5)",dot:"#8b5cf6",text:"#a78bfa"},"Bibliotecas e Frameworks":{bg:"rgba(249,115,22,0.12)",border:"rgba(249,115,22,0.5)",dot:"#f97316",text:"#fb923c"},"Desenvolvimento de Aplica\u00e7\u00f5es":{bg:"rgba(20,184,166,0.12)",border:"rgba(20,184,166,0.5)",dot:"#14b8a6",text:"#5eead4"}};
+const BC={lembrar:{level:1,label:"Lembrar",color:"#94a3b8"},compreender:{level:2,label:"Compreender",color:"#38bdf8"},aplicar:{level:3,label:"Aplicar",color:"#4ade80"},analisar:{level:4,label:"Analisar",color:"#fbbf24"},avaliar:{level:5,label:"Avaliar",color:"#f472b6"},criar:{level:6,label:"Criar",color:"#a78bfa"}};
+const WE=[
+{id:"worked_example_variaveis_1",verbo:"Expressar pontos de vista",conceito:"Vari\u00e1veis",bloom:"avaliar",content:"Worked Example 1: Utilizando Vari\u00e1veis em Python.\n\nEnunciado: Voc\u00ea \u00e9 um desenvolvedor de software e precisa utilizar vari\u00e1veis para armazenar informa\u00e7\u00f5es de um usu\u00e1rio. Expressar pontos de vista sobre a import\u00e2ncia de vari\u00e1veis na programa\u00e7\u00e3o em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Passo 1 \u2014 Entender o conceito de vari\u00e1veis.\n\u2022 Passo 2 \u2014 Analisar como as vari\u00e1veis podem ser utilizadas para armazenar informa\u00e7\u00f5es de um usu\u00e1rio.\n\u2022 Passo 3 \u2014 Expressar a opini\u00e3o de que as vari\u00e1veis s\u00e3o fundamentais para a programa\u00e7\u00e3o em Python devido \u00e0 flexibilidade e capacidade de reutiliza\u00e7\u00e3o.\n\nConcls\u00e3o: As vari\u00e1veis s\u00e3o essenciais para qualquer linguagem de programa\u00e7\u00e3o, incluindo Python, pois permitem ao desenvolvedor armazenar e manipular dados de forma eficiente."},
+{id:"worked_example_variaveis_2",verbo:"Dizer",conceito:"Vari\u00e1veis",bloom:"lembrar",content:"Worked Example 2: Compreendendo Vari\u00e1veis em Python.\n\nEnunciado: Dizer como as vari\u00e1veis s\u00e3o declaradas e utilizadas em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Passo 1 \u2014 Em Python as vari\u00e1veis s\u00e3o declaradas atribuindo um valor a elas.\n\u2022 Passo 2 \u2014 O tipo de uma vari\u00e1vel \u00e9 determinado pelo tipo do valor atribu\u00eddo.\n\u2022 Passo 3 \u2014 Exemplos: x = 5 e y = 'hello'.\n\nConcls\u00e3o: Em Python, as vari\u00e1veis s\u00e3o declaradas implicitamente ao atribuir um valor, e o tipo \u00e9 determinado dinamicamente."},
+{id:"worked_example_variaveis_3",verbo:"Construir quadros sin\u00f3pticos",conceito:"Vari\u00e1veis",bloom:"criar",content:"Worked Example 3: Analisando Tipos de Vari\u00e1veis em Python.\n\nEnunciado: Construir quadros sin\u00f3pticos para comparar os principais tipos de vari\u00e1veis em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Passo 1 \u2014 Identificar os principais tipos: int, float, str, list e dict.\n\u2022 Passo 2 \u2014 Construir um quadro sin\u00f3ptico para comparar caracter\u00edsticas de cada tipo.\n\u2022 Passo 3 \u2014 Analisar o quadro para entender similaridades e diferen\u00e7as.\n\nConcls\u00e3o: O quadro sin\u00f3ptico demonstra a diversidade e especificidades de cada tipo de vari\u00e1vel em Python."},
+{id:"worked_example_tipos_de_dados_1",verbo:"Ilustrar",conceito:"Tipos de Dados",bloom:"compreender",content:"Exemplo resolvido: Ilustrar a diferen\u00e7a entre tipos de dados num\u00e9ricos em Python.\n\nTarefa: Explique e ilustre a diferen\u00e7a entre int, float e complex.\n\nResolu\u00e7\u00e3o:\n\u2022 int: n\u00fameros inteiros (1, 2, 3).\n\u2022 float: n\u00fameros de ponto flutuante (3.14, -0.5).\n\u2022 complex: n\u00fameros complexos com parte real e imagin\u00e1ria (2+3j).\n\nConcls\u00e3o: A compreens\u00e3o dos tipos num\u00e9ricos \u00e9 fundamental, pois cada um tem suas caracter\u00edsticas e utiliza\u00e7\u00f5es espec\u00edficas."},
+{id:"worked_example_tipos_de_dados_2",verbo:"Transcrever",conceito:"Tipos de Dados",bloom:"lembrar",content:"Exemplo resolvido: Transcrever exemplos de tipos de dados em Python.\n\nTarefa: Transcreva string, boolean e lista.\n\nResolu\u00e7\u00e3o:\n\u2022 String: \"Hello, World!\"\n\u2022 Boolean: True ou False\n\u2022 Lista: [1, 2, 3]\n\nConcls\u00e3o: A transcri\u00e7\u00e3o correta dos tipos de dados \u00e9 essencial para a comunica\u00e7\u00e3o eficaz entre programadores."},
+{id:"worked_example_tipos_de_dados_3",verbo:"Implementar",conceito:"Tipos de Dados",bloom:"aplicar",content:"Exemplo resolvido: Implementar a convers\u00e3o entre tipos de dados em Python.\n\nTarefa: Demonstre a convers\u00e3o entre int, float e string.\n\nResolu\u00e7\u00e3o:\n\u2022 int para float: float(5) \u2192 5.0\n\u2022 float para string: str(3.14) \u2192 '3.14'\n\u2022 Exemplo: x = 5; y = float(x); z = str(y)\n\nConcls\u00e3o: Implementar convers\u00f5es entre tipos \u00e9 crucial para lidar com diferentes situa\u00e7\u00f5es e evitar erros de tipo."},
+{id:"worked_example_estruturas_de_controle_1",verbo:"Distinguir",conceito:"Estruturas de Controle",bloom:"analisar",content:"Tarefa: Distinguir entre if, elif e else em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 if: avalia uma condi\u00e7\u00e3o booleana; executa o bloco se verdadeira.\n\u2022 elif: verificado apenas se o if anterior for falso.\n\u2022 else: executado quando todas as condi\u00e7\u00f5es anteriores s\u00e3o falsas.\n\nConcls\u00e3o: Distinguir entre if, elif e else permite escrever l\u00f3gica condicional clara e eficiente."},
+{id:"worked_example_estruturas_de_controle_2",verbo:"Caracterizar",conceito:"Estruturas de Controle",bloom:"compreender",content:"Tarefa: Caracterizar as principais estruturas de controle em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 if/elif/else: controla fluxo condicional.\n\u2022 while: repete enquanto condi\u00e7\u00e3o \u00e9 verdadeira.\n\u2022 for: itera sobre sequ\u00eancias.\n\u2022 try/except: trata exce\u00e7\u00f5es.\n\nConcls\u00e3o: Conhecer as caracter\u00edsticas de cada estrutura \u00e9 essencial para escolher a abordagem mais adequada."},
+{id:"worked_example_estruturas_de_controle_3",verbo:"Propor problemas para resolu\u00e7\u00e3o",conceito:"Estruturas de Controle",bloom:"criar",content:"Tarefa: Propor problemas que exijam o uso de estruturas de controle em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Problema 1 (if/elif/else): classificar nota em Aprovado, Recupera\u00e7\u00e3o ou Reprovado.\n\u2022 Problema 2 (while): solicitar entrada at\u00e9 valor v\u00e1lido.\n\u2022 Problema 3 (for): calcular soma de elementos de uma lista.\n\nConcls\u00e3o: Propor problemas contextualizados facilita a compreens\u00e3o e fixa\u00e7\u00e3o das estruturas de controle."},
+{id:"worked_example_lacos_de_repeticao_1",verbo:"Assinalar",conceito:"La\u00e7os de Repeti\u00e7\u00e3o",bloom:"lembrar",content:"Tarefa: Assinalar os la\u00e7os de repeti\u00e7\u00e3o dispon\u00edveis em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 for: itera sobre sequ\u00eancias (listas, strings, range).\n\u2022 while: repete enquanto condi\u00e7\u00e3o booleana \u00e9 verdadeira.\n\u2022 break: interrompe o la\u00e7o.\n\u2022 continue: pula para a pr\u00f3xima itera\u00e7\u00e3o.\n\u2022 else: executa ao t\u00e9rmino normal do la\u00e7o.\n\nConcls\u00e3o: Assinalar as caracter\u00edsticas dos la\u00e7os \u00e9 o primeiro passo para utiliz\u00e1-los corretamente."},
+{id:"worked_example_lacos_de_repeticao_2",verbo:"Registrar",conceito:"La\u00e7os de Repeti\u00e7\u00e3o",bloom:"lembrar",content:"Tarefa: Registrar o comportamento dos la\u00e7os de repeti\u00e7\u00e3o em diferentes cen\u00e1rios.\n\nResolu\u00e7\u00e3o:\n\u2022 for i in range(5) \u2192 produz: 0, 1, 2, 3, 4.\n\u2022 while x < 3 com x=0 e x+=1 \u2192 produz: 0, 1, 2.\n\u2022 break em for \u2192 encerra o la\u00e7o prematuramente.\n\nConcls\u00e3o: Registrar o comportamento dos la\u00e7os permite prever resultados e depurar programas."},
+{id:"worked_example_lacos_de_repeticao_3",verbo:"Assinalar",conceito:"La\u00e7os de Repeti\u00e7\u00e3o",bloom:"aplicar",content:"Tarefa: Assinalar erros comuns no uso de la\u00e7os de repeti\u00e7\u00e3o em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Loop infinito: while True sem break adequado.\n\u2022 Erro de \u00edndice: acesso al\u00e9m do tamanho da sequ\u00eancia no for.\n\u2022 Modifica\u00e7\u00e3o de lista durante itera\u00e7\u00e3o.\n\u2022 Off-by-one: range(n) vai de 0 a n-1.\n\nConcls\u00e3o: Identificar erros comuns em la\u00e7os \u00e9 crucial para escrever c\u00f3digo correto e eficiente."},
+{id:"worked_example_funcoes_1",verbo:"Levantar hip\u00f3teses",conceito:"Fun\u00e7\u00f5es",bloom:"analisar",content:"Tarefa: Levantar hip\u00f3teses sobre o comportamento de fun\u00e7\u00f5es em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Analisar par\u00e2metros: tipos esperados, valores padr\u00e3o, *args e **kwargs.\n\u2022 Hip\u00f3tese: a fun\u00e7\u00e3o retorna None se n\u00e3o houver return expl\u00edcito.\n\u2022 Testar hip\u00f3teses executando a fun\u00e7\u00e3o com diferentes argumentos.\n\nConcls\u00e3o: Levantar hip\u00f3teses sobre fun\u00e7\u00f5es desenvolve o racioc\u00ednio anal\u00edtico e a capacidade de prever comportamentos."},
+{id:"worked_example_funcoes_2",verbo:"Propor problemas para resolu\u00e7\u00e3o",conceito:"Fun\u00e7\u00f5es",bloom:"criar",content:"Tarefa: Propor problemas que exijam a cria\u00e7\u00e3o de fun\u00e7\u00f5es em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Problema 1: calcular_media(notas) que retorna a m\u00e9dia de uma lista.\n\u2022 Problema 2: validar_cpf(cpf) que verifica se um CPF \u00e9 v\u00e1lido.\n\u2022 Problema 3: fibonacci(n) que retorna o n-\u00e9simo n\u00famero da sequ\u00eancia.\n\nConcls\u00e3o: Propor problemas centrados em fun\u00e7\u00f5es incentiva a modulariza\u00e7\u00e3o e reutiliza\u00e7\u00e3o de c\u00f3digo."},
+{id:"worked_example_funcoes_3",verbo:"Deduzir",conceito:"Fun\u00e7\u00f5es",bloom:"compreender",content:"Tarefa: Deduzir o resultado de fun\u00e7\u00f5es Python a partir de sua defini\u00e7\u00e3o.\n\nResolu\u00e7\u00e3o:\n\u2022 Rastrear a execu\u00e7\u00e3o linha a linha.\n\u2022 Identificar o valor da instru\u00e7\u00e3o return em cada caminho.\n\u2022 Considerar efeitos colaterais e escopo de vari\u00e1veis locais vs. globais.\n\nConcls\u00e3o: Deduzir resultados de fun\u00e7\u00f5es \u00e9 fundamental para compreender e depurar programas sem execut\u00e1-los."},
+{id:"worked_example_modulos_1",verbo:"Nomear",conceito:"M\u00f3dulos",bloom:"lembrar",content:"Tarefa: Nomear os principais m\u00f3dulos da biblioteca padr\u00e3o do Python.\n\nResolu\u00e7\u00e3o:\n\u2022 math: fun\u00e7\u00f5es matem\u00e1ticas avan\u00e7adas.\n\u2022 os: intera\u00e7\u00e3o com o sistema operacional.\n\u2022 sys: acesso a par\u00e2metros do interpretador.\n\u2022 datetime: manipula\u00e7\u00e3o de datas e horas.\n\u2022 json: codifica\u00e7\u00e3o e decodifica\u00e7\u00e3o de JSON.\n\u2022 random: gera\u00e7\u00e3o de n\u00fameros aleat\u00f3rios.\n\nConcls\u00e3o: Nomear os principais m\u00f3dulos \u00e9 o primeiro passo para utiliz\u00e1-los eficientemente."},
+{id:"worked_example_modulos_2",verbo:"Associar",conceito:"M\u00f3dulos",bloom:"compreender",content:"Tarefa: Associar m\u00f3dulos Python \u00e0s suas funcionalidades.\n\nResolu\u00e7\u00e3o:\n\u2022 os \u2192 gerenciamento de arquivos, diret\u00f3rios, vari\u00e1veis de ambiente.\n\u2022 collections \u2192 tipos especializados: Counter, deque, defaultdict.\n\u2022 itertools \u2192 ferramentas para iteradores eficientes.\n\u2022 re \u2192 express\u00f5es regulares.\n\nConcls\u00e3o: Associar m\u00f3dulos \u00e0s suas funcionalidades facilita a escolha da ferramenta certa para cada problema."},
+{id:"worked_example_modulos_3",verbo:"Gerar",conceito:"M\u00f3dulos",bloom:"criar",content:"Tarefa: Gerar um m\u00f3dulo Python personalizado para reutiliza\u00e7\u00e3o.\n\nResolu\u00e7\u00e3o:\n\u2022 Criar utils_strings.py com fun\u00e7\u00f5es: capitalizar_palavras(), remover_acentos(), contar_vogais().\n\u2022 Adicionar docstrings e type hints.\n\u2022 Testar: from utils_strings import capitalizar_palavras.\n\nConcls\u00e3o: Gerar m\u00f3dulos personalizados promove reutiliza\u00e7\u00e3o de c\u00f3digo e organiza\u00e7\u00e3o do projeto."},
+{id:"worked_example_tratamento_de_erros_1",verbo:"Compor",conceito:"Tratamento de Erros",bloom:"criar",content:"Exemplo 1: Compor um tratamento de erro personalizado em Python.\n\nTarefa: Criar uma fun\u00e7\u00e3o que some dois n\u00fameros e trate erros caso os n\u00fameros sejam inv\u00e1lidos.\n\nResolu\u00e7\u00e3o:\n\u2022 Passo 1 \u2014 Definir a fun\u00e7\u00e3o com try-except para capturar erros de entrada.\n\u2022 Passo 2 \u2014 Verificar se as entradas s\u00e3o v\u00e1lidas; levantar erro personalizado se n\u00e3o.\n\u2022 Passo 3 \u2014 Realizar a soma e retornar o resultado.\n\nConcls\u00e3o: Compor o tratamento de erro garante que a fun\u00e7\u00e3o seja robusta e devolva informa\u00e7\u00f5es \u00fateis ao usu\u00e1rio."},
+{id:"worked_example_tratamento_de_erros_2",verbo:"Separar algo a partir de um determinado crit\u00e9rio",conceito:"Tratamento de Erros",bloom:"analisar",content:"Exemplo 2: Separar erros de execu\u00e7\u00e3o e erros de sintaxe em um programa Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Passo 1 \u2014 Executar o c\u00f3digo e identificar erros de sintaxe que interrompem imediatamente.\n\u2022 Passo 2 \u2014 Corrigir sintaxe e executar novamente para encontrar erros de execu\u00e7\u00e3o.\n\u2022 Passo 3 \u2014 Registrar e categorizar todos os erros encontrados.\n\nConcls\u00e3o: Separar erros pelo crit\u00e9rio de natureza ajuda a diagnosticar problemas de forma sistem\u00e1tica."},
+{id:"worked_example_tratamento_de_erros_3",verbo:"Escolher",conceito:"Tratamento de Erros",bloom:"avaliar",content:"Exemplo 3: Escolher o m\u00e9todo de tratamento de erro adequado em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Passo 1 \u2014 Analisar a natureza do erro e as consequ\u00eancias do tratamento.\n\u2022 Passo 2 \u2014 Considerar: try-except, finally, exce\u00e7\u00f5es personalizadas.\n\u2022 Passo 3 \u2014 Escolher o m\u00e9todo baseado nas necessidades de robustez e seguran\u00e7a.\n\nConcls\u00e3o: Escolher o m\u00e9todo correto garante a qualidade e confiabilidade do software."},
+{id:"worked_example_manipulacao_de_arquivos_1",verbo:"Construir",conceito:"Manipula\u00e7\u00e3o de Arquivos",bloom:"criar",content:"Tarefa: Construir um programa Python para leitura e escrita de arquivos de texto.\n\nResolu\u00e7\u00e3o:\n\u2022 Passo 1 \u2014 Abrir arquivo de entrada: open('entrada.csv', 'r')\n\u2022 Passo 2 \u2014 Processar cada linha com csv.reader.\n\u2022 Passo 3 \u2014 Escrever resultados: open('saida.csv', 'w') com csv.writer.\n\nConcls\u00e3o: Construir programas de manipula\u00e7\u00e3o de arquivos \u00e9 habilidade fundamental para automa\u00e7\u00e3o e processamento de dados."},
+{id:"worked_example_manipulacao_de_arquivos_2",verbo:"Construir ou resolver analogias",conceito:"Manipula\u00e7\u00e3o de Arquivos",bloom:"compreender",content:"Tarefa: Construir analogias para compreender a manipula\u00e7\u00e3o de arquivos em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Abrir um arquivo \u2192 como abrir uma gaveta: localizar e abrir antes de acessar o conte\u00fado.\n\u2022 Ler um arquivo \u2192 como ler um livro: linha por linha ou tudo de uma vez.\n\u2022 Fechar um arquivo \u2192 como fechar a gaveta: garante que nada se perca.\n\nConcls\u00e3o: Analogias facilitam a compreens\u00e3o de conceitos abstratos, tornando o aprendizado mais intuitivo."},
+{id:"worked_example_manipulacao_de_arquivos_3",verbo:"Explicitar argumentos a favor ou contra",conceito:"Manipula\u00e7\u00e3o de Arquivos",bloom:"avaliar",content:"Tarefa: Explicitar argumentos a favor ou contra o uso de 'with' na manipula\u00e7\u00e3o de arquivos.\n\nResolu\u00e7\u00e3o:\n\u2022 A favor: fechamento autom\u00e1tico mesmo em caso de exce\u00e7\u00e3o; c\u00f3digo mais limpo e pythonico.\n\u2022 Contra: pode dificultar compartilhamento de handles entre fun\u00e7\u00f5es.\n\nConcls\u00e3o: Na maioria dos casos, 'with open()' \u00e9 a pr\u00e1tica recomendada em Python."},
+{id:"worked_example_estruturas_de_dados_1",verbo:"Reproduzir",conceito:"Estruturas de Dados",bloom:"lembrar",content:"Tarefa: Reproduzir exemplos de uso das principais estruturas de dados em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Lista: frutas = ['ma\u00e7\u00e3', 'banana'] \u2014 mut\u00e1vel, ordenada.\n\u2022 Tupla: coordenadas = (10, 20) \u2014 imut\u00e1vel, ordenada.\n\u2022 Conjunto: numeros = {1, 2, 3} \u2014 sem duplicatas.\n\u2022 Dicion\u00e1rio: pessoa = {'nome': 'Ana', 'idade': 30} \u2014 chave-valor.\n\nConcls\u00e3o: Reproduzir exemplos \u00e9 o ponto de partida para entender quando e como usar cada estrutura."},
+{id:"worked_example_estruturas_de_dados_2",verbo:"Sugerir hip\u00f3teses a partir de crit\u00e9rios",conceito:"Estruturas de Dados",bloom:"analisar",content:"Tarefa: Sugerir hip\u00f3teses para implementar um sistema de gerenciamento de estoque.\n\nResolu\u00e7\u00e3o:\n\u2022 Passo 1 \u2014 Identificar crit\u00e9rios: nome, quantidade, pre\u00e7o de produtos.\n\u2022 Passo 2 \u2014 Hip\u00f3teses: dicion\u00e1rio, lista de dicion\u00e1rios, classes.\n\u2022 Passo 3 \u2014 Analisar: dicion\u00e1rio oferece acesso O(1); lista \u00e9 mais simples mas O(n).\n\nConcls\u00e3o: Sugerir hip\u00f3teses a partir de crit\u00e9rios permite criar solu\u00e7\u00f5es eficientes."},
+{id:"worked_example_estruturas_de_dados_3",verbo:"Redigir (di\u00e1rio, relat\u00f3rio, texto...)",conceito:"Estruturas de Dados",bloom:"criar",content:"Tarefa: Redigir um relat\u00f3rio comparando as estruturas de dados dispon\u00edveis em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Listas: mut\u00e1veis e preservam ordem.\n\u2022 Tuplas: imut\u00e1veis e mais eficientes.\n\u2022 Conjuntos: eliminam duplicatas, suportam opera\u00e7\u00f5es de teoria dos conjuntos.\n\u2022 Dicion\u00e1rios: mapeiam chaves a valores com acesso O(1).\n\nConcls\u00e3o: Redigir compara\u00e7\u00f5es t\u00e9cnicas desenvolve capacidade de s\u00edntese e comunica\u00e7\u00e3o."},
+{id:"worked_example_listas_1",verbo:"Formular",conceito:"Listas",bloom:"criar",content:"Tarefa: Criar uma lista de compras para um supermercado utilizando Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Passo 1 \u2014 Definir lista vazia: compras = []\n\u2022 Passo 2 \u2014 Loop para adicionar itens at\u00e9 o usu\u00e1rio decidir parar.\n\u2022 Passo 3 \u2014 append() para cada item; exibir com for.\n\nConcls\u00e3o: Listas em Python s\u00e3o estruturas vers\u00e1teis para criar solu\u00e7\u00f5es din\u00e2micas e interativas."},
+{id:"worked_example_listas_2",verbo:"Repetir",conceito:"Listas",bloom:"lembrar",content:"Tarefa: Repetir opera\u00e7\u00f5es b\u00e1sicas com listas em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Cria\u00e7\u00e3o: numeros = [1, 2, 3, 4, 5]\n\u2022 Acesso: numeros[0] \u2192 1; numeros[-1] \u2192 5\n\u2022 Modifica\u00e7\u00e3o: numeros[2] = 30\n\u2022 Adi\u00e7\u00e3o: append(6); insert(0, 0)\n\u2022 Remo\u00e7\u00e3o: remove(3); pop()\n\nConcls\u00e3o: Repetir opera\u00e7\u00f5es fundamentais consolida o conhecimento e prepara para usos mais complexos."},
+{id:"worked_example_listas_3",verbo:"Selecionar",conceito:"Listas",bloom:"aplicar",content:"Tarefa: Selecionar elementos de uma lista com base em crit\u00e9rios espec\u00edficos.\n\nResolu\u00e7\u00e3o:\n\u2022 List comprehension: pares = [x for x in numeros if x % 2 == 0]\n\u2022 filter(): pares = list(filter(lambda x: x % 2 == 0, numeros))\n\u2022 Loop: for x in numeros: if x%2==0: pares.append(x)\n\nConcls\u00e3o: Python oferece m\u00faltiplas formas de selecionar elementos; list comprehensions s\u00e3o geralmente preferidas."},
+{id:"worked_example_tuplas_1",verbo:"Descrever",conceito:"Tuplas",bloom:"compreender",content:"Tarefa: Descrever como criar uma tupla em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Par\u00eanteses: coordenadas = (10, 20, 30)\n\u2022 Sem par\u00eanteses: ponto = 1, 2, 3\n\u2022 Tupla unit\u00e1ria: um_elemento = (42,) \u2014 a v\u00edrgula \u00e9 obrigat\u00f3ria!\n\u2022 Fun\u00e7\u00e3o tuple(): letras = tuple('abc') \u2192 ('a', 'b', 'c')\n\nConcls\u00e3o: Tuplas s\u00e3o criadas de diversas formas; sua imutabilidade as torna ideais para dados que n\u00e3o devem ser alterados."},
+{id:"worked_example_tuplas_2",verbo:"Ilustrar",conceito:"Tuplas",bloom:"compreender",content:"Tarefa: Ilustrar como acessar elementos de uma tupla em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 \u00cdndice: t = (10, 20, 30, 40); t[0] \u2192 10; t[-1] \u2192 40\n\u2022 Fatiamento: t[1:3] \u2192 (20, 30)\n\u2022 Unpacking: a, b, c, d = t\n\u2022 Itera\u00e7\u00e3o: for valor in t: print(valor)\n\nConcls\u00e3o: Apesar de imut\u00e1veis, tuplas suportam todas as opera\u00e7\u00f5es de leitura das sequ\u00eancias Python."},
+{id:"worked_example_tuplas_3",verbo:"Aplicar",conceito:"Tuplas",bloom:"aplicar",content:"Tarefa: Aplicar cria\u00e7\u00e3o e manipula\u00e7\u00e3o de tuplas em um exemplo pr\u00e1tico.\n\nResolu\u00e7\u00e3o:\n\u2022 Representar: estudante = ('Jo\u00e3o', 21, 9.5)\n\u2022 Acessar: nome, idade, nota = estudante (unpacking)\n\u2022 Lista de alunos: alunos = [('Ana', 20, 8.7), ('Bia', 22, 9.1)]\n\u2022 Ordenar por nota: alunos.sort(key=lambda x: x[2], reverse=True)\n\nConcls\u00e3o: Tuplas s\u00e3o \u00fateis para representar registros onde imutabilidade e clareza estrutural s\u00e3o desejadas."},
+{id:"worked_example_dicionarios_1",verbo:"Estabelecer paralelo",conceito:"Dicion\u00e1rios",bloom:"compreender",content:"Tarefa: Estabelecer paralelo entre dicion\u00e1rios Python e conceitos do mundo real.\n\nResolu\u00e7\u00e3o:\n\u2022 Dicion\u00e1rio real \u2192 palavra:defini\u00e7\u00e3o; dict Python \u2192 chave:valor.\n\u2022 Agenda telef\u00f4nica \u2192 nome:telefone, com busca r\u00e1pida pelo nome.\n\u2022 Tabela de pre\u00e7os \u2192 produto:pre\u00e7o, com acesso O(1).\n\nConcls\u00e3o: Paralelos com conceitos cotidianos facilitam a internaliza\u00e7\u00e3o de dicion\u00e1rios Python."},
+{id:"worked_example_dicionarios_2",verbo:"Solucionar",conceito:"Dicion\u00e1rios",bloom:"aplicar",content:"Tarefa: Solucionar um problema de contagem de frequ\u00eancia usando dicion\u00e1rios Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Inicializar: frequencias = {}\n\u2022 Contar: frequencias[palavra] = frequencias.get(palavra, 0) + 1\n\u2022 Alternativa: from collections import Counter; freq = Counter(palavras)\n\u2022 Resultado: {'python': 3, '\u00e9': 2, 'legal': 1}\n\nConcls\u00e3o: Dicion\u00e1rios s\u00e3o ideais para problemas de mapeamento e contagem em Python."},
+{id:"worked_example_dicionarios_3",verbo:"Integrar",conceito:"Dicion\u00e1rios",bloom:"criar",content:"Tarefa: Integrar dicion\u00e1rios com outras estruturas de dados para criar um sistema de cadastro.\n\nResolu\u00e7\u00e3o:\n\u2022 Representar cada usu\u00e1rio: {'id': 1, 'nome': 'Ana', 'email': 'ana@x.com'}\n\u2022 Armazenar em lista: usuarios = [usuario1, usuario2, ...]\n\u2022 Fun\u00e7\u00f5es: cadastrar_usuario(), buscar_por_id(), listar_usuarios().\n\nConcls\u00e3o: Integrar dicion\u00e1rios com listas e fun\u00e7\u00f5es permite construir sistemas flex\u00edveis e escal\u00e1veis."},
+{id:"worked_example_programacao_orientada_a_objetos_1",verbo:"Executar",conceito:"Programa\u00e7\u00e3o Orientada a Objetos",bloom:"aplicar",content:"Tarefa: Executar um programa que demonstre heran\u00e7a em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Veiculo com atributos marca, modelo e m\u00e9todo imprimir_dados().\n\u2022 Carro herda Veiculo, adiciona numero_portas.\n\u2022 Moto herda Veiculo, adiciona cubicagem_do_motor.\n\u2022 Executar: Carro('Toyota','Corolla',4).imprimir_dados()\n\nConcls\u00e3o: As subclasses herdam e estendem a classe pai, demonstrando polimorfismo e reutiliza\u00e7\u00e3o de c\u00f3digo."},
+{id:"worked_example_programacao_orientada_a_objetos_2",verbo:"Enumerar",conceito:"Programa\u00e7\u00e3o Orientada a Objetos",bloom:"lembrar",content:"Tarefa: Enumerar os pilares da Programa\u00e7\u00e3o Orientada a Objetos em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 1. Encapsulamento: ocultar detalhes internos; acesso controlado via m\u00e9todos.\n\u2022 2. Heran\u00e7a: classe filha herda atributos e m\u00e9todos da classe pai.\n\u2022 3. Polimorfismo: objetos de classes diferentes tratados de forma uniforme.\n\u2022 4. Abstra\u00e7\u00e3o: representar entidades do mundo real como classes.\n\nConcls\u00e3o: Os quatro pilares fornecem a base conceitual para projetar sistemas OO coesos e flex\u00edveis."},
+{id:"worked_example_programacao_orientada_a_objetos_3",verbo:"Identificar e contrastar caracter\u00edsticas",conceito:"Programa\u00e7\u00e3o Orientada a Objetos",bloom:"analisar",content:"Tarefa: Identificar e contrastar heran\u00e7a e polimorfismo em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Heran\u00e7a: nova classe baseada em existente; relação 'é um'.\n\u2022 Polimorfismo: objeto pode ter m\u00faltiplas formas; implementado via override de m\u00e9todos.\n\u2022 Semelhan\u00e7as: ambos promovem reutiliza\u00e7\u00e3o de c\u00f3digo.\n\u2022 Diferen\u00e7as: heran\u00e7a \u2192 estrutura; polimorfismo \u2192 comportamento.\n\nConcls\u00e3o: Identificar e contrastar esses conceitos permite aplic\u00e1-los de forma complementar."},
+{id:"worked_example_bibliotecas_e_frameworks_1",verbo:"Propor problemas para resolu\u00e7\u00e3o",conceito:"Bibliotecas e Frameworks",bloom:"criar",content:"Tarefa: Propor problemas para resolu\u00e7\u00e3o utilizando bibliotecas Python populares.\n\nResolu\u00e7\u00e3o:\n\u2022 NumPy: calcular m\u00e9dia, mediana e desvio padr\u00e3o de um conjunto de dados.\n\u2022 Pandas: carregar CSV de vendas, filtrar por per\u00edodo e calcular total por categoria.\n\u2022 Matplotlib: visualizar evolu\u00e7\u00e3o mensal de vendas com gr\u00e1fico de linhas anotado.\n\nConcls\u00e3o: Propor problemas com bibliotecas reais prepara para desafios do mercado em ci\u00eancia de dados."},
+{id:"worked_example_bibliotecas_e_frameworks_2",verbo:"Distinguir",conceito:"Bibliotecas e Frameworks",bloom:"analisar",content:"Tarefa: Distinguir entre biblioteca e framework em Python.\n\nResolu\u00e7\u00e3o:\n\u2022 Biblioteca: funcionalidades que voc\u00ea chama quando precisa; voc\u00ea controla o fluxo. Ex.: NumPy, Requests.\n\u2022 Framework: define a estrutura do projeto; ele chama seu c\u00f3digo (IoC). Ex.: Django, Flask, FastAPI.\n\u2022 Crit\u00e9rio IoC: framework chama voc\u00ea; biblioteca, voc\u00ea chama ela.\n\nConcls\u00e3o: Distinguir biblioteca de framework \u00e9 essencial para decis\u00f5es arquiteturais corretas."},
+{id:"worked_example_bibliotecas_e_frameworks_3",verbo:"Ordenar objetos, elementos ou processo",conceito:"Bibliotecas e Frameworks",bloom:"compreender",content:"Tarefa: Ordenar elementos utilizando bibliotecas Python.\n\nResolu\u00e7\u00e3o:\n\u2022 sorted() nativo: sorted(dados, key=lambda x: x['valor'])\n\u2022 Pandas: df.sort_values('coluna', ascending=False)\n\u2022 NumPy argsort(): np.argsort(array) \u2192 \u00edndices que ordenariam o array.\n\u2022 heapq: heapq.heappush(heap, (prioridade, item))\n\nConcls\u00e3o: Python e suas bibliotecas oferecem m\u00faltiplas abordagens para ordena\u00e7\u00e3o."},
+{id:"worked_example_desenvolvimento_de_aplicacoes_1",verbo:"Reordenar",conceito:"Desenvolvimento de Aplica\u00e7\u00f5es",bloom:"compreender",content:"Tarefa: Reordenar as etapas do processo de desenvolvimento de uma aplica\u00e7\u00e3o Python.\n\nResolu\u00e7\u00e3o:\n\u2022 1. Levantamento de requisitos e planejamento.\n\u2022 2. Design da arquitetura e escolha de tecnologias.\n\u2022 3. Implementa\u00e7\u00e3o com boas pr\u00e1ticas.\n\u2022 4. Testes unit\u00e1rios, de integra\u00e7\u00e3o e de aceita\u00e7\u00e3o.\n\u2022 5. Deploy e configura\u00e7\u00e3o de ambiente de produ\u00e7\u00e3o.\n\u2022 6. Manuten\u00e7\u00e3o, monitoramento e itera\u00e7\u00f5es.\n\nConcls\u00e3o: Reordenar etapas refor\u00e7a a compreens\u00e3o do ciclo de vida de software."},
+{id:"worked_example_desenvolvimento_de_aplicacoes_2",verbo:"Rotular",conceito:"Desenvolvimento de Aplica\u00e7\u00f5es",bloom:"lembrar",content:"Tarefa: Rotular os componentes de uma aplica\u00e7\u00e3o Python t\u00edpica com Flask.\n\nResolu\u00e7\u00e3o:\n\u2022 app.py: ponto de entrada, configura\u00e7\u00e3o e rotas.\n\u2022 models.py: defini\u00e7\u00e3o das entidades e l\u00f3gica de persist\u00eancia.\n\u2022 templates/: arquivos HTML (Jinja2) para a camada de apresenta\u00e7\u00e3o.\n\u2022 static/: CSS, JS e imagens est\u00e1ticas.\n\u2022 requirements.txt: depend\u00eancias do projeto.\n\nConcls\u00e3o: Rotular componentes favorece organiza\u00e7\u00e3o e colabora\u00e7\u00e3o em projetos Python."},
+{id:"worked_example_desenvolvimento_de_aplicacoes_3",verbo:"Organizar",conceito:"Desenvolvimento de Aplica\u00e7\u00f5es",bloom:"criar",content:"Tarefa: Organizar a estrutura de pastas de uma aplica\u00e7\u00e3o Python seguindo boas pr\u00e1ticas.\n\nResolu\u00e7\u00e3o:\n\u2022 src/api/ \u2192 rotas e controladores.\n\u2022 src/services/ \u2192 l\u00f3gica de neg\u00f3cio.\n\u2022 src/repositories/ \u2192 acesso a dados.\n\u2022 src/models/ \u2192 entidades do dom\u00ednio.\n\u2022 tests/ \u2192 testes automatizados.\n\u2022 docs/ \u2192 documenta\u00e7\u00e3o t\u00e9cnica.\n\nConcls\u00e3o: Organizar a estrutura desde o in\u00edcio reduz a complexidade acidental e facilita a escalabilidade."}
+];
+let sel=new Set(),view='grid',sort='concept',bloom='all',exp=new Set(),sq='';
+function init(){
+  rCL();rSt();rCards();
+  document.getElementById('concept-search').addEventListener('input',e=>{sq=e.target.value.toLowerCase();fCL();});
+  document.getElementById('sort-select').addEventListener('change',e=>{sort=e.target.value;rCards();});
+  document.getElementById('bloom-filter').addEventListener('change',e=>{bloom=e.target.value;rCards();});
+  document.getElementById('select-all-btn').addEventListener('click',()=>{CONCEPTS.forEach(c=>sel.add(c));document.querySelectorAll('.cpill').forEach(p=>p.classList.add('active'));rCards();rTags();rSt();});
+  document.getElementById('clear-btn').addEventListener('click',()=>{sel.clear();document.querySelectorAll('.cpill').forEach(p=>p.classList.remove('active'));rCards();rTags();rSt();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+}
+function rCL(){
+  const l=document.getElementById('concept-list');l.innerHTML='';
+  CONCEPTS.forEach(c=>{
+    const col=CC[c];const cnt=WE.filter(e=>e.conceito===c).length;
+    const p=document.createElement('div');
+    p.className='cpill'+(sel.has(c)?' active':'');p.dataset.concept=c;
+    p.innerHTML=`<span class="cdot" style="background:${col.dot};box-shadow:0 0 6px ${col.dot}66;"></span><span class="cname">${c}</span><span class="ccnt">${cnt}</span>`;
+    p.addEventListener('click',()=>tog(c,p));l.appendChild(p);
+  });
+}
+function fCL(){document.querySelectorAll('.cpill').forEach(p=>{p.style.display=p.dataset.concept.toLowerCase().includes(sq)?'':'none';});}
+function tog(c,p){if(sel.has(c)){sel.delete(c);p.classList.remove('active');}else{sel.add(c);p.classList.add('active');}rCards();rTags();rSt();}
+function rTags(){
+  const ct=document.getElementById('active-tags');ct.innerHTML='';
+  sel.forEach(c=>{
+    const col=CC[c];const t=document.createElement('div');t.className='atag';
+    t.style.cssText=`background:${col.bg};border-color:${col.border};color:${col.text};`;
+    t.innerHTML=`${c} <span>\u2715</span>`;
+    t.addEventListener('click',()=>{sel.delete(c);const p=document.querySelector('.cpill[data-concept="'+c+'"]');if(p)p.classList.remove('active');rCards();rTags();rSt();});
+    ct.appendChild(t);
+  });
+  const hl=document.getElementById('title-hl');
+  if(sel.size===0)hl.textContent='Selecionados';
+  else if(sel.size===1)hl.textContent=[...sel][0];
+  else hl.textContent=`${sel.size} Conceitos`;
+}
+function rSt(){
+  const f=getF();
+  document.getElementById('stats-row').innerHTML=`<div class="schip"><span class="scl">Conceitos selecionados</span><span class="scv">${sel.size} / ${CONCEPTS.length}</span></div><div class="schip"><span class="scl">Exemplos exibidos</span><span class="scv">${f.length} / ${WE.length}</span></div>`;
+}
+function getF(){
+  let ex=sel.size===0?[]:WE.filter(e=>sel.has(e.conceito));
+  if(bloom!=='all')ex=ex.filter(e=>e.bloom===bloom);
+  ex.sort((a,b)=>{
+    if(sort==='concept')return a.conceito.localeCompare(b.conceito)||a.id.localeCompare(b.id);
+    if(sort==='id')return a.id.localeCompare(b.id);
+    if(sort==='verb')return a.verbo.localeCompare(b.verbo);
+    return 0;
+  });
+  return ex;
+}
+function rCards(){
+  const ct=document.getElementById('cc');const es=document.getElementById('empty-state');const rc=document.getElementById('results-count');
+  const ex=getF();rSt();
+  if(ex.length===0){ct.innerHTML='';es.style.display='flex';rc.innerHTML='<strong>0</strong> exemplos';return;}
+  es.style.display='none';rc.innerHTML=`<strong>${ex.length}</strong> exemplo${ex.length!==1?'s':''}`;
+  ct.innerHTML='';ex.forEach((e,i)=>ct.appendChild(mkCard(e,i)));
+}
+function mkCard(ex,idx){
+  const col=CC[ex.conceito];const bl=BC[ex.bloom]||BC.compreender;
+  const num=ex.id.match(/_(\d+)$/)?.[1]||'?';const isE=exp.has(ex.id);
+  const c=document.createElement('div');
+  c.className='wec'+(isE?' exp':'');c.dataset.id=ex.id;c.style.animationDelay=`${idx*0.04}s`;
+  const dots=[1,2,3,4,5,6].map(l=>`<span class="bd" style="${l<=bl.level?`background:${bl.color};box-shadow:0 0 4px ${bl.color}88;`:''}""></span>`).join('');
+  c.innerHTML=`
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;background:linear-gradient(90deg,${col.dot},${col.dot}44);"></div>
+    <div class="cardh">
+      <div class="cnum" style="background:${col.bg};border:1px solid ${col.border};color:${col.text};">#${num}</div>
+      <div class="cmeta">
+        <div class="cid">${ex.id}</div>
+        <div class="cbadge" style="background:${col.bg};border-color:${col.border};color:${col.text};">
+          <span style="width:5px;height:5px;border-radius:50%;background:${col.dot};display:inline-block;"></span>${ex.conceito}
+        </div>
+      </div>
+    </div>
+    <div class="cverb"><span class="cvl">Verbo Bloom:</span><span class="cvv">${ex.verbo}</span></div>
+    <div class="ccont">${ex.content.replace(/\n/g,'<br>')}</div>
+    <div class="cfoot">
+      <button class="exbtn" onclick="togE('${ex.id}')">${isE?'\u25b2 Ver menos':'\u25bc Ver mais'}</button>
+      <div style="display:flex;align-items:center;gap:7px;">
+        <div class="bdots" title="N\u00edvel Bloom: ${bl.label}">${dots}</div>
+        <span style="font-size:.65rem;color:var(--text-muted);">${bl.label}</span>
+        <button onclick="openM('${ex.id}')" style="background:${col.bg};border:1px solid ${col.border};color:${col.text};padding:3px 8px;border-radius:5px;font-size:.68rem;font-weight:600;cursor:pointer;font-family:inherit;">\u229e Abrir</button>
+      </div>
+    </div>`;
+  return c;
+}
+function togE(id){if(exp.has(id))exp.delete(id);else exp.add(id);rCards();}
+function openM(id){
+  const ex=WE.find(e=>e.id===id);if(!ex)return;
+  const col=CC[ex.conceito];const bl=BC[ex.bloom]||BC.compreender;
+  const num=ex.id.match(/_(\d+)$/)?.[1]||'?';
+  document.getElementById('modal-title').innerHTML=`<span style="color:${col.text};">#${num}</span> \u2014 ${ex.conceito}`;
+  document.getElementById('modal-subtitle').innerHTML=`<span style="background:${col.bg};border:1px solid ${col.border};color:${col.text};padding:2px 8px;border-radius:999px;">${ex.id}</span> &nbsp;\u00b7&nbsp; <span style="color:${bl.color}">\u25cf ${bl.label}</span> &nbsp;\u00b7&nbsp; Verbo: ${ex.verbo}`;
+  document.getElementById('modal-body').textContent=ex.content;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(event){
+  if(event&&event.target!==document.getElementById('modal-overlay')&&!event.target.classList.contains('mclose'))return;
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function setView(v){
+  view=v;const ct=document.getElementById('cc');
+  document.getElementById('gvb').classList.toggle('active',v==='grid');
+  document.getElementById('lvb').classList.toggle('active',v==='list');
+  if(v==='list')ct.classList.add('lv');else ct.classList.remove('lv');
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
