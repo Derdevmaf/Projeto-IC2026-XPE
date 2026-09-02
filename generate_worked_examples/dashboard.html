@@ -53,6 +53,19 @@
     .btn.bp{background:var(--accent);border-color:transparent;color:#fff}
     .btn.bp:hover{background:var(--accent-soft);box-shadow:var(--shadow-glow)}
     .srow{display:flex;flex-direction:column;gap:6px}
+    .mode-toggle{display:flex;border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden;background:var(--bg-card)}
+    .mode-btn{flex:1;padding:7px 6px;border:none;background:transparent;color:var(--text-muted);font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;transition:var(--transition);letter-spacing:.03em;line-height:1.3}
+    .mode-btn.active{background:var(--accent);color:#fff;box-shadow:0 0 14px rgba(59,130,246,0.4)}
+    .mode-btn.active-and{background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;box-shadow:0 0 14px rgba(139,92,246,0.4)}
+    .mode-hint{font-size:.67rem;color:var(--text-muted);line-height:1.5;padding:6px 8px;background:rgba(255,255,255,0.03);border-radius:var(--radius-sm);border:1px solid var(--border)}
+    .mode-hint strong{color:var(--accent2)}
+    .mode-hint.and-hint strong{color:#a78bfa}
+    .intersect-banner{display:none;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--radius-sm);background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(99,102,241,0.08));border:1px solid rgba(139,92,246,0.35);margin-bottom:12px}
+    .intersect-banner.show{display:flex}
+    .intersect-banner span{font-size:.74rem;color:#c4b5fd;flex:1;line-height:1.4}
+    .intersect-banner strong{color:#a78bfa}
+    .concept-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+    .concept-chip{font-size:.62rem;font-weight:600;padding:2px 7px;border-radius:999px;border:1px solid}
     .schip{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;border-radius:var(--radius-sm);background:var(--bg-card);border:1px solid var(--border)}
     .scl{font-size:.73rem;color:var(--text-secondary)}
     .scv{font-size:.95rem;font-weight:700;color:var(--text-primary)}
@@ -129,6 +142,14 @@
       </div>
       <div class="stitle">&#128218; Conceitos</div>
       <div class="clist" id="concept-list"></div>
+      <div class="stitle">&#127759; Modo de Filtro</div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="mode-or" onclick="setMode('or')" title="Mostra exemplos de qualquer conceito selecionado">&#8746; OU (União)</button>
+        <button class="mode-btn" id="mode-and" onclick="setMode('and')" title="Mostra exemplos que abrangem todos os conceitos selecionados juntos">&#8745; E (Interseção)</button>
+      </div>
+      <div class="mode-hint" id="mode-hint">
+        <strong>Modo OU:</strong> exibe exemplos de <em>qualquer</em> conceito selecionado.
+      </div>
       <div class="stitle">&#9889; Ações</div>
       <div class="sact">
         <button class="btn bp" id="select-all-btn">Selecionar Todos</button>
@@ -138,6 +159,9 @@
       <div class="srow" id="stats-row"></div>
     </aside>
     <div class="content">
+      <div class="intersect-banner" id="intersect-banner">
+        <span>&#8745; <strong>Modo Interseção:</strong> exibindo apenas exemplos que abordam <strong>todos</strong> os conceitos selecionados juntos.</span>
+      </div>
       <div class="ch">
         <div>
           <div class="ctitle">Exemplos <span id="title-hl">Selecionados</span></div>
@@ -169,9 +193,9 @@
       </div>
       <div id="cc"></div>
       <div class="es" id="empty-state">
-        <div class="es-icon">&#128300;</div>
-        <h3>Nenhum exemplo selecionado</h3>
-        <p>Selecione um ou mais conceitos no painel lateral para visualizar os worked examples correspondentes.</p>
+        <div class="es-icon" id="empty-icon">&#128300;</div>
+        <h3 id="empty-title">Nenhum exemplo selecionado</h3>
+        <p id="empty-msg">Selecione um ou mais conceitos no painel lateral para visualizar os worked examples correspondentes.</p>
       </div>
     </div>
   </main>
@@ -235,7 +259,55 @@ const WE=[
 {id:"worked_example_desenvolvimento_de_aplicacoes_2",verbo:"Rotular",conceito:"Desenvolvimento de Aplica\u00e7\u00f5es",bloom:"lembrar",content:"Tarefa: Rotular os componentes de uma aplica\u00e7\u00e3o Python t\u00edpica com Flask.\n\nResolu\u00e7\u00e3o:\n\u2022 app.py: ponto de entrada, configura\u00e7\u00e3o e rotas.\n\u2022 models.py: defini\u00e7\u00e3o das entidades e l\u00f3gica de persist\u00eancia.\n\u2022 templates/: arquivos HTML (Jinja2) para a camada de apresenta\u00e7\u00e3o.\n\u2022 static/: CSS, JS e imagens est\u00e1ticas.\n\u2022 requirements.txt: depend\u00eancias do projeto.\n\nConcls\u00e3o: Rotular componentes favorece organiza\u00e7\u00e3o e colabora\u00e7\u00e3o em projetos Python."},
 {id:"worked_example_desenvolvimento_de_aplicacoes_3",verbo:"Organizar",conceito:"Desenvolvimento de Aplica\u00e7\u00f5es",bloom:"criar",content:"Tarefa: Organizar a estrutura de pastas de uma aplica\u00e7\u00e3o Python seguindo boas pr\u00e1ticas.\n\nResolu\u00e7\u00e3o:\n\u2022 src/api/ \u2192 rotas e controladores.\n\u2022 src/services/ \u2192 l\u00f3gica de neg\u00f3cio.\n\u2022 src/repositories/ \u2192 acesso a dados.\n\u2022 src/models/ \u2192 entidades do dom\u00ednio.\n\u2022 tests/ \u2192 testes automatizados.\n\u2022 docs/ \u2192 documenta\u00e7\u00e3o t\u00e9cnica.\n\nConcls\u00e3o: Organizar a estrutura desde o in\u00edcio reduz a complexidade acidental e facilita a escalabilidade."}
 ];
-let sel=new Set(),view='grid',sort='concept',bloom='all',exp=new Set(),sq='';
+let sel=new Set(),view='grid',sort='concept',bloom='all',exp=new Set(),sq='',filterMode='or';
+
+// Aliases de conceitos para detectar menções no conteúdo do exemplo
+const CONCEPT_ALIASES={
+  "Variáveis":["variável","variáveis","variable","var ","atribuição"],
+  "Tipos de Dados":["tipo de dado","tipos de dado","tipo de dados","int","float","string","boolean","bool","lista","list","dict","tuple","complex","str(","int(","float("],
+  "Estruturas de Controle":["if","elif","else","estrutura de controle","condicional","condição","fluxo","try","except"],
+  "Laços de Repetição":["for","while","laço","loop","iteração","repetição","break","continue","range("],
+  "Funções":["função","funções","def ","return","parâmetro","argumento","lambda","recursão"],
+  "Módulos":["módulo","módulos","import","from ","biblioteca","package"],
+  "Tratamento de Erros":["try","except","erro","exception","raise","finally","ValueError","TypeError"],
+  "Manipulação de Arquivos":["arquivo","open(","read","write","csv","json","with open","close("],
+  "Estruturas de Dados":["estrutura de dados","lista","tupla","dicionário","conjunto","set","deque","stack","heap"],
+  "Listas":["lista","list[","append","pop(","insert","remove","slice","comprehension"],
+  "Tuplas":["tupla","tuple","imutável","unpacking"],
+  "Dicionários":["dicionário","dict","chave","valor","key","items(","get(","Counter"],
+  "Programação Orientada a Objetos":["classe","objeto","herança","polimorfismo","encapsulamento","class ","self","método","instância"],
+  "Bibliotecas e Frameworks":["numpy","pandas","matplotlib","flask","django","framework","biblioteca","requests"],
+  "Desenvolvimento de Aplicações":["aplicação","deploy","flask","django","api","rota","template","requirements"]
+};
+
+// Verifica se um exemplo menciona um determinado conceito (no conceito principal OU no conteúdo)
+function exampleMentionsConcept(ex, concept){
+  if(ex.conceito===concept) return true;
+  const aliases=CONCEPT_ALIASES[concept]||[];
+  const contentLower=ex.content.toLowerCase();
+  return aliases.some(alias=>contentLower.includes(alias.toLowerCase()));
+}
+
+function setMode(mode){
+  filterMode=mode;
+  const orBtn=document.getElementById('mode-or');
+  const andBtn=document.getElementById('mode-and');
+  const hint=document.getElementById('mode-hint');
+  const banner=document.getElementById('intersect-banner');
+  if(mode==='and'){
+    orBtn.classList.remove('active'); andBtn.classList.add('active','active-and');
+    hint.classList.add('and-hint');
+    hint.innerHTML='<strong>Modo E (Interseção):</strong> exibe exemplos que abordam <em>todos</em> os conceitos selecionados juntos.';
+    if(sel.size>=2) banner.classList.add('show');
+  } else {
+    andBtn.classList.remove('active','active-and'); orBtn.classList.add('active');
+    hint.classList.remove('and-hint');
+    hint.innerHTML='<strong>Modo OU:</strong> exibe exemplos de <em>qualquer</em> conceito selecionado.';
+    banner.classList.remove('show');
+  }
+  rCards();rSt();
+}
+
 function init(){
   rCL();rSt();rCards();
   document.getElementById('concept-search').addEventListener('input',e=>{sq=e.target.value.toLowerCase();fCL();});
@@ -256,27 +328,51 @@ function rCL(){
   });
 }
 function fCL(){document.querySelectorAll('.cpill').forEach(p=>{p.style.display=p.dataset.concept.toLowerCase().includes(sq)?'':'none';});}
-function tog(c,p){if(sel.has(c)){sel.delete(c);p.classList.remove('active');}else{sel.add(c);p.classList.add('active');}rCards();rTags();rSt();}
+function tog(c,p){
+  if(sel.has(c)){sel.delete(c);p.classList.remove('active');}else{sel.add(c);p.classList.add('active');}
+  // Atualiza banner de interseção
+  const banner=document.getElementById('intersect-banner');
+  if(filterMode==='and'&&sel.size>=2) banner.classList.add('show'); else banner.classList.remove('show');
+  rCards();rTags();rSt();
+}
 function rTags(){
   const ct=document.getElementById('active-tags');ct.innerHTML='';
   sel.forEach(c=>{
     const col=CC[c];const t=document.createElement('div');t.className='atag';
     t.style.cssText=`background:${col.bg};border-color:${col.border};color:${col.text};`;
     t.innerHTML=`${c} <span>\u2715</span>`;
-    t.addEventListener('click',()=>{sel.delete(c);const p=document.querySelector('.cpill[data-concept="'+c+'"]');if(p)p.classList.remove('active');rCards();rTags();rSt();});
+    t.addEventListener('click',()=>{
+      sel.delete(c);
+      const p=document.querySelector('.cpill[data-concept="'+c+'"]');if(p)p.classList.remove('active');
+      const banner=document.getElementById('intersect-banner');
+      if(filterMode==='and'&&sel.size>=2) banner.classList.add('show'); else banner.classList.remove('show');
+      rCards();rTags();rSt();
+    });
     ct.appendChild(t);
   });
   const hl=document.getElementById('title-hl');
   if(sel.size===0)hl.textContent='Selecionados';
   else if(sel.size===1)hl.textContent=[...sel][0];
+  else if(filterMode==='and')hl.textContent=`${sel.size} Conceitos (Interseção)`;
   else hl.textContent=`${sel.size} Conceitos`;
 }
 function rSt(){
   const f=getF();
-  document.getElementById('stats-row').innerHTML=`<div class="schip"><span class="scl">Conceitos selecionados</span><span class="scv">${sel.size} / ${CONCEPTS.length}</span></div><div class="schip"><span class="scl">Exemplos exibidos</span><span class="scv">${f.length} / ${WE.length}</span></div>`;
+  const modeLabel=filterMode==='and'?'&#8745; Interseção':'&#8746; União';
+  document.getElementById('stats-row').innerHTML=`<div class="schip"><span class="scl">Conceitos selecionados</span><span class="scv">${sel.size} / ${CONCEPTS.length}</span></div><div class="schip"><span class="scl">Exemplos exibidos</span><span class="scv">${f.length} / ${WE.length}</span></div><div class="schip"><span class="scl">Modo de filtro</span><span class="scv" style="font-size:.78rem">${modeLabel}</span></div>`;
 }
 function getF(){
-  let ex=sel.size===0?[]:WE.filter(e=>sel.has(e.conceito));
+  let ex;
+  if(sel.size===0){
+    ex=[];
+  } else if(filterMode==='and'&&sel.size>=2){
+    // Interseção: exibe exemplos que mencionam TODOS os conceitos selecionados
+    const selArr=[...sel];
+    ex=WE.filter(e=>selArr.every(c=>exampleMentionsConcept(e,c)));
+  } else {
+    // União: exibe exemplos de qualquer conceito selecionado
+    ex=WE.filter(e=>sel.has(e.conceito));
+  }
   if(bloom!=='all')ex=ex.filter(e=>e.bloom===bloom);
   ex.sort((a,b)=>{
     if(sort==='concept')return a.conceito.localeCompare(b.conceito)||a.id.localeCompare(b.id);
@@ -289,7 +385,23 @@ function getF(){
 function rCards(){
   const ct=document.getElementById('cc');const es=document.getElementById('empty-state');const rc=document.getElementById('results-count');
   const ex=getF();rSt();
-  if(ex.length===0){ct.innerHTML='';es.style.display='flex';rc.innerHTML='<strong>0</strong> exemplos';return;}
+  if(ex.length===0){
+    ct.innerHTML='';es.style.display='flex';rc.innerHTML='<strong>0</strong> exemplos';
+    if(sel.size===0){
+      document.getElementById('empty-icon').textContent='🔬';
+      document.getElementById('empty-title').textContent='Nenhum exemplo selecionado';
+      document.getElementById('empty-msg').textContent='Selecione um ou mais conceitos no painel lateral para visualizar os worked examples correspondentes.';
+    } else if(filterMode==='and'&&sel.size>=2){
+      document.getElementById('empty-icon').textContent='🔍';
+      document.getElementById('empty-title').textContent='Nenhum exemplo cobre todos os conceitos juntos';
+      document.getElementById('empty-msg').textContent='Nenhum exemplo encontrado que aborde todos os conceitos selecionados simultaneamente. Tente selecionar menos conceitos ou use o Modo OU.';
+    } else {
+      document.getElementById('empty-icon').textContent='🔬';
+      document.getElementById('empty-title').textContent='Nenhum exemplo encontrado';
+      document.getElementById('empty-msg').textContent='Nenhum exemplo corresponde à seleção atual.';
+    }
+    return;
+  }
   es.style.display='none';rc.innerHTML=`<strong>${ex.length}</strong> exemplo${ex.length!==1?'s':''}`;
   ct.innerHTML='';ex.forEach((e,i)=>ct.appendChild(mkCard(e,i)));
 }
